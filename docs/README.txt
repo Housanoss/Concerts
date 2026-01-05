@@ -1,1 +1,0 @@
-Je to appka na kupovani listku

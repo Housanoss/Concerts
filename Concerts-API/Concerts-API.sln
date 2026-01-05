@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concerts-API", "Concerts-API\Concerts-API.csproj", "{3C652836-B65A-4F94-A2D8-53673EEC4E17}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C652836-B65A-4F94-A2D8-53673EEC4E17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C652836-B65A-4F94-A2D8-53673EEC4E17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C652836-B65A-4F94-A2D8-53673EEC4E17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C652836-B65A-4F94-A2D8-53673EEC4E17}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {11286AE7-ABEB-4DF3-8933-75496BC36576}
+	EndGlobalSection
+EndGlobal
