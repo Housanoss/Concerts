@@ -1,9 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Concerts_API.Entities;
+using Microsoft.EntityFrameworkCore;
+using Concerts_API.Entities;
+
+
 namespace Concerts_API.Data
 {
-    public class dbConcerts : DbContext
+    public class WebDbContext : DbContext
     {
         public DbSet<Concert> Concerts { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Band> Bands { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
