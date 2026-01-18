@@ -13,6 +13,18 @@ namespace Concerts_API
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            // 1. Add CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:5077") // REPLACE with your React app's URL
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+                    });
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -23,8 +35,15 @@ namespace Concerts_API
 
             app.UseHttpsRedirection();
 
+            // 2. Use the CORS policy
+            app.UseCors("AllowReactApp");
+
             app.UseAuthorization();
 
 
             app.MapControllers();
 
+            app.Run();
+        }
+    }
+}
