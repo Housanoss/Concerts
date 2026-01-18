@@ -28,7 +28,3 @@ namespace Concerts_API
 
             app.MapControllers();
 
-            app.Run();
-        }
-    }
-}
