@@ -1,9 +1,14 @@
 Je to appka na kupovani listku<br>
 
 
-Merty - Vytvořit homepage<br>
-      - Narvat databazi datama<br>
-houska - controlery -nacitani koncertu<br>
-                    -nacitani zakoupenych listku<br>
-                    -meneni obasahu podle katekorie<br>
-                    
+### ToDo
+
+**Merty**
+- [ ] Vytvořit homepage
+- [ ] Naplnit databázi daty ("Narvat databázi datama")
+
+**Houska**
+- **Controlery**
+  - [ ] Načítání koncertů
+  - [ ] Načítání zakoupených lístků
+  - [ ] Měnění obsahu podle kategorie
