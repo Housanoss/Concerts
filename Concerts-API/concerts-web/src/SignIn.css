@@ -1,0 +1,79 @@
+#root{
+    width:100%;
+}
+
+/* Dark background for the whole container */
+.auth-container {
+    background-color: #2c2c2c; /* Dark gray */
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+}
+
+.title {
+    text-decoration: underline;
+    margin-bottom: 2rem;
+    font-weight: normal;
+    letter-spacing: 1px;
+}
+
+/* Toggle (Log in / Sign up) styling */
+.toggle-container {
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+    .toggle-container span {
+        margin: 0 10px;
+        padding-bottom: 2px;
+    }
+
+.active {
+    color: white;
+    border-bottom: 2px solid #888;
+}
+
+.inactive {
+    color: #888;
+}
+
+/* Form Styling */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Space between inputs */
+    width: 300px;
+}
+
+input {
+    padding: 10px;
+    background-color: white; /* Light gray input background */
+    border: none;
+    border-radius: 4px;
+    color: #2c2c2c;
+}
+
+.submit-btn {
+    background-color: #FAAA3A; /* The Orange/Yellow color */
+    color: #333;
+    padding: 10px;
+    border: none;
+    border-radius: 20px; /* Pill shape */
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+    .submit-btn:hover {
+        background-color: #e6992e;
+    }
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
