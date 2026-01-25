@@ -43,6 +43,17 @@ namespace Concerts_API
 
             app.MapControllers();
 
+            // 1. Define the policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp",
+                    policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            });
+
+
+            // 2. Use the policy
+            app.UseCors("AllowReactApp");
+
             app.Run();
         }
     }
