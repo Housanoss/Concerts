@@ -23,7 +23,10 @@ namespace Concerts_API.Entities
         [Column("Venue", TypeName = "text")]
         public string Venue { get; set; }
 
-        [Column("Bands", TypeName = "text")]
+        [Column("HeadLiner", TypeName = "varchar(50)")]
+        public string HeadLiner { get; set; }
+
+        [Column("Bands", TypeName = "varchar(255)")]
         public string Bands { get; set; }
 
         // Mapping decimal(10,0)

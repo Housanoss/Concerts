@@ -1,27 +1,40 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore; // Fixes ToListAsync
+using Microsoft.EntityFrameworkCore;
 using Concerts_API.Data;
-using Concerts_API.Entities; // Fixes the 'Concerts' type error
+using Concerts_API.Entities;
 
-[ApiController] // Tells .NET this is an API (not a website with HTML)
-[Route("api/[controller]")] // Sets the URL to: your-site.com/api/concerts
-public class ConcertsController : ControllerBase
+namespace Concerts_API.Controllers
 {
-    private readonly WebDbContext _context;
-
-    // Dependency Injection: This "grabs" your database connection so the controller can use it
-    public ConcertsController(WebDbContext context)
+    [ApiController]
+    // This defines the URL path. [controller] automatically becomes "Concerts"
+    [Route("api/[controller]")]
+    public class ConcertsController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly WebDbContext _context;
 
-    [HttpGet] // This method runs when the user does a GET request
-    public async Task<ActionResult<IEnumerable<concerts>>> GetConcerts()
-    {
-        // 1. Ask the database for the list of concerts
-        var list = await _context.Concerts.ToListAsync();
+        // We "Inject" the database context here so we can use it in our methods
+        public ConcertsController(WebDbContext context)
+        {
+            _context = context;
+        }
 
-        // 2. Send that list back to the browser as JSON
-        return Ok(list);
+        // GET: api/concerts
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Concert>>> GetConcerts()
+        {
+            try
+            {
+                // Task.Run logic: Fetch all rows from the Concerts table in MySQL
+                var list = await _context.Concerts.ToListAsync();
+
+                // Send the data back to React with a "200 OK" status
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                // If something breaks (like the DB connection), tell the user why
+                return StatusCode(500, $"Database Error: {ex.Message}");
+            }
+        }
     }
 }

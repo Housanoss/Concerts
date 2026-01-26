@@ -1,6 +1,5 @@
 ﻿using Concerts_API.Entities;
 using Microsoft.EntityFrameworkCore;
-using Concerts_API.Entities;
 
 
 namespace Concerts_API.Data
