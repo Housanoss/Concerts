@@ -39,36 +39,41 @@ export default function App() {
     if (loading) return <div style={{ padding: '20px' }}>Connecting to API...</div>;
 
     return (
-        <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif' }}>
-            <h1>TicketMaster Clone</h1>
-            <p>Current Shows Available:</p>
-            <hr />
-            <button className = "filterBtn">Filter</button>
-            <button className = "orderbyBtn">Order by</button>
+        <div style={{display:'flex', flexDirection:'row'} }>
+            <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif' }}>
+                <h1>TicketMaster Clone</h1>
+                <p>Current Shows Available:</p>
+                <hr />
+                <button className = "filterBtn">Filter</button>
+                <button className = "orderbyBtn">Order by</button>
 
-            {/* 6. Rendering the list */}
-            {concerts.length === 0 ? (
-                <p>No concerts found. Check if your MySQL table has data!</p>
-            ) : (
-                <div style={{ display: 'grid', gap: '20px', marginTop: '20px' }}>
-                    {concerts.map((item) => (
-                        <div
-                            key={item.id}
-                            style={{
-                                padding: '20px',
-                                border: '1px solid #ddd',
-                                borderRadius: '12px',
-                                boxShadow: '2px 2px 10px rgba(0,0,0,0.05)'
-                            }}
-                        >
-                            <h2 style={{ margin: '0' }}>{item.headLiner}</h2>
-                            <p style={{ color: '#555' }}>Openers: {item.bands}</p>
-                            <p style={{ color: '#555' }}>Venue: {item.venue}</p>
-                            <small>Date: {new Date(item.date).toLocaleDateString()}</small>
-                        </div>
-                    ))}
-                </div>
-            )}
+                {/* 6. Rendering the list */}
+                {concerts.length === 0 ? (
+                    <p>No concerts found. Check if your MySQL table has data!</p>
+                ) : (
+                    <div style={{ display: 'grid', gap: '20px', marginTop: '20px' }}>
+                        {concerts.map((item) => (
+                            <div
+                                key={item.id}
+                                style={{
+                                    padding: '20px',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '12px',
+                                    boxShadow: '2px 2px 10px rgba(0,0,0,0.05)'
+                                }}
+                            >
+                                <h2 style={{ margin: '0' }}>{item.headLiner}</h2>
+                                <p style={{ color: '#555' }}>Openers: {item.bands}</p>
+                                <p style={{ color: '#555' }}>Venue: {item.venue}</p>
+                                <small>Date: {new Date(item.date).toLocaleDateString()}</small>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+            <div>
+                tutaj budó listky
+            </div>
         </div>
     );
 }
