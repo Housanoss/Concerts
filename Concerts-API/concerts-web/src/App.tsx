@@ -43,6 +43,8 @@ export default function App() {
             <h1>TicketMaster Clone</h1>
             <p>Current Shows Available:</p>
             <hr />
+            <button className = "filterBtn">Filter</button>
+            <button className = "orderbyBtn">Order by</button>
 
             {/* 6. Rendering the list */}
             {concerts.length === 0 ? (
