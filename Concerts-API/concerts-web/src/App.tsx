@@ -5,20 +5,11 @@ import "./App.css";
 // This must match your C# Concert class properties exactly.
 interface Concert {
     id: number;
-    headliner: string;
-    openers: string;
+    headLiner: string;
     bands: string;
     venue: string;
     date: string;
-    type: string;
-    genre: string;
-    // bude potřeba dodělat na controlleru description: string;
 }
-
-
-
-
-
 
 interface ConcertTicketProps {
     concertId: number;
@@ -33,12 +24,8 @@ function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     }
 
     return (
-        <div className='ticketInfo'>
-            <h3>{concert.headliner}</h3>
-            <p>{concert.openers}</p>
-            <p>{concert.venue}</p>
-            <p>{new Date(concert.date).toLocaleDateString()}</p>
-            <p>{concert.type}</p>
+        <div>
+            <h5>{concert.headLiner}</h5>
         </div>
     )
 }
@@ -51,41 +38,43 @@ function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
     }
 
     return (
-        <div className='concertInfo'>
-            <h3>{concert.headliner}</h3>
-            <p>{concert.openers}</p>
-            <p>{concert.venue}</p>
-            <p>{new Date(concert.date).toLocaleDateString()}</p>
-            <p>{concert.genre}</p>
+        <div>
+            <h5>{concert.headLiner}</h5>
         </div>
     )
 }
+
 export default function App() {
     // 2. State management: 'concerts' starts as an empty array []
     const [concerts, setConcerts] = useState<Concert[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    export interface Concert {
-        id: number;
-        venue: string;
-        date: string;
-        price: number;
-        genres: string;
-        description: string;
-        sold_out: boolean;
+    useEffect(() => {
+        // 3. FETCH DATA: Change '7001' to the port you see in your browser when C# starts!
+        const API_URL = 'https://localhost:7231/api/concerts';
 
-        bands: string;
-        headliner: string;
-        openers: string;
-    }
+        fetch(API_URL)
+            .then((res) => {
+                if (!res.ok) throw new Error("API not responding");
+                return res.json();
+            })
+            .then((data: Concert[]) => {
+                // 4. Save the data into our state
+                setConcerts(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Connection failed:", err);
+                setLoading(false);
+            });
+    }, []);
 
-
-
-
+    // 5. Visual Feedback: Show a message while waiting for the API
+    if (loading) return <div style={{ padding: '20px' }}>Connecting to API...</div>;
 
     return (
         <div className='page'>
-            <div className='leftSpace'>
+            <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif' }}>
                 <h1>The Ticket Stand</h1>
                 <p>Current Shows Available:</p>
                 <hr />
@@ -98,14 +87,6 @@ export default function App() {
                 ) : (
                     <div style={{ display: 'grid', gap: '20px', marginTop: '20px' }}>
                         {concerts.map((item) => (
-                            <ConcertInfo
-                                key={item.id}
-                                concertId={item.id}
-                                concerts={[item]} // pole jen s tímto koncertem
-                            />
-                        ))}
-
-                        {concerts.map((item) => (
                             <div
                                 key={item.id}
                                 style={{
@@ -115,7 +96,7 @@ export default function App() {
                                     boxShadow: '2px 2px 10px rgba(0,0,0,0.05)'
                                 }}
                             >
-                                <h2 style={{ margin: '0' }}>{item.headliner}</h2>
+                                <h2 style={{ margin: '0' }}>{item.headLiner}</h2>
                                 <p style={{ color: '#555' }}>Openers: {item.bands}</p>
                                 <p style={{ color: '#555' }}>Venue: {item.venue}</p>
                                 <small>Date: {new Date(item.date).toLocaleDateString()}</small>
@@ -124,12 +105,16 @@ export default function App() {
                     </div>
                 )}
             </div>
-            <div className='rightSpace'>
+            <div className='leftSpace'>
                 <div className='topBtns'>
                     <button className='loginBtn'>Log In</button>
                     <button className='signupBtn'>Sign Up</button>
                 </div>
-                <ConcertTicket concertId={3} />
+                <ConcertTicket concertId={3}
+                    concerts={concerts} />
+
+                <ConcertInfo concertId={2}
+                    concerts={concerts} />
             </div>
         </div>
     );
