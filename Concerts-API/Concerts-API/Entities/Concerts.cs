@@ -35,7 +35,7 @@ namespace Concerts_API.Entities
 
         // Mapping tinyint(1) to bool is standard for MySQL connector
         [Column("Sold_out")]
-        public bool SoldOut { get; set; }
+        public bool Sold_out { get; set; }
 
         [Column("Description", TypeName = "text")]
         public string Description { get; set; }

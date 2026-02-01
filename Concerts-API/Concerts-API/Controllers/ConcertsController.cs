@@ -6,13 +6,11 @@ using Concerts_API.Entities;
 namespace Concerts_API.Controllers
 {
     [ApiController]
-    // This defines the URL path. [controller] automatically becomes "Concerts"
     [Route("api/[controller]")]
     public class ConcertsController : ControllerBase
     {
         private readonly WebDbContext _context;
 
-        // We "Inject" the database context here so we can use it in our methods
         public ConcertsController(WebDbContext context)
         {
             _context = context;
@@ -20,19 +18,45 @@ namespace Concerts_API.Controllers
 
         // GET: api/concerts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Concert>>> GetConcerts()
+        public async Task<ActionResult<IEnumerable<object>>> GetConcerts()
         {
             try
             {
-                // Task.Run logic: Fetch all rows from the Concerts table in MySQL
-                var list = await _context.Concerts.ToListAsync();
+                
+                var rawConcerts = await _context.Concerts.ToListAsync();
 
-                // Send the data back to React with a "200 OK" status
-                return Ok(list);
+               
+                var formattedList = rawConcerts.Select(c =>
+                {
+                    // Split 
+                    var splitBands = c.Bands != null
+                        ? c.Bands.Split(',').Select(b => b.Trim()).ToList()
+                        : new List<string>();
+
+                    // Logic: First band is Headliner, the rest are Openers
+                    var dynamicHeadliner = splitBands.FirstOrDefault() ?? "TBA";
+                    var dynamicOpeners = string.Join(", ", splitBands.Skip(1));
+
+                    
+                    return new
+                    {
+                        c.Id,
+                        c.Venue,
+                        c.Date,
+                        c.Price,
+                        c.Genres,
+                        c.Description,
+                        c.Sold_out,
+                        Bands = c.Bands,
+                        Headliner = dynamicHeadliner,
+                        Openers = dynamicOpeners
+                    };
+                });
+
+                return Ok(formattedList);
             }
             catch (Exception ex)
             {
-                // If something breaks (like the DB connection), tell the user why
                 return StatusCode(500, $"Database Error: {ex.Message}");
             }
         }
