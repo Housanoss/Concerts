@@ -21,8 +21,8 @@ namespace Concerts_API.Entities
         [Column("Price", TypeName = "decimal(10, 0)")]
         public decimal Price { get; set; }
 
-        [Column("Description", TypeName = "text")]
-        public string Description { get; set; }
+        [Column("Type", TypeName = "text")]
+        public string Type { get; set; }
 
         // Navigation Properties
         [ForeignKey(nameof(ConcertId))]
