@@ -30,6 +30,20 @@ function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     )
 }
 
+function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
+    const concert = concerts.find(c => c.id === concertId);
+
+    if (!concert) {
+        return <p>Concert with ID {concertId} not found.</p>;
+    }
+
+    return (
+        <div>
+            <h5>{concert.headLiner}</h5>
+        </div>
+    )
+}
+
 export default function App() {
     // 2. State management: 'concerts' starts as an empty array []
     const [concerts, setConcerts] = useState<Concert[]>([]);
@@ -97,7 +111,10 @@ export default function App() {
                     <button className='signupBtn'>Sign Up</button>
                 </div>
                 <ConcertTicket concertId={3}
-                    concerts={concerts}/>
+                    concerts={concerts} />
+
+                <ConcertInfo concertId={2} 
+                    concerts={concerts} />
             </div>
         </div>
     );
