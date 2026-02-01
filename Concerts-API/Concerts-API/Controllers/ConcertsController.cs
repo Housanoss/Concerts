@@ -18,7 +18,7 @@ namespace Concerts_API.Controllers
 
         // GET: api/concerts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetConcerts()
+        public async Task<ActionResult<IEnumerable<object>>> GetConcert()
         {
             try
             {
