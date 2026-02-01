@@ -1,17 +1,64 @@
-using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Concerts_API.Data;
+using Concerts_API.Entities;
 
-// In SDK-style projects such as this one, several assembly attributes that were historically
-// defined in this file are now automatically added during build and populated with
-// values defined in project properties. For details of which attributes are included
-// and how to customise this process see: https://aka.ms/assembly-info-properties
+namespace Concerts_API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TicketsController : ControllerBase
+    {
+        private readonly WebDbContext _context;
 
+        public TicketsController(WebDbContext context)
+        {
+            _context = context;
+        }
 
-// Setting ComVisible to false makes the types in this assembly not visible to COM
-// components.  If you need to access a type in this assembly from COM, set the ComVisible
-// attribute to true on that type.
+        // GET: api/tickets/user/1
+        // Filters tickets by the UserId column
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<Ticket>>> GetUserTickets(int userId)
+        {
+            var userTickets = await _context.Tickets
+                // Load the Concert info so we see "Sabaton" instead of just "1"
+                .Include(t => t.Concert)
+                .Where(t => t.UserId == userId)
+                .ToListAsync();
 
-[assembly: ComVisible(false)]
+            if (userTickets == null || !userTickets.Any())
+            {
+                return Ok(new List<Ticket>()); // Return empty list instead of 404
+            }
 
-// The following GUID is for the ID of the typelib if this project is exposed to COM.
+            return Ok(userTickets);
+        }
 
-[assembly: Guid("9d673420-b299-4f96-9881-fd1a72667ab4")]
+        // POST: api/tickets/purchase
+        // Saves a new ticket to the database
+        [HttpPost("purchase")]
+        public async Task<ActionResult<Ticket>> PurchaseTicket([FromBody] Ticket ticket)
+        {
+            try
+            {
+                // Safety Check: Ensure the Concert exists before selling a ticket
+                var concertExists = await _context.Concerts.AnyAsync(c => c.Id == ticket.ConcertId);
+                if (!concertExists)
+                {
+                    return BadRequest("The selected concert does not exist.");
+                }
+
+                // Add and Save
+                _context.Tickets.Add(ticket);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Ticket purchased successfully!", ticketId = ticket.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+    }
+}

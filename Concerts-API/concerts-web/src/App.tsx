@@ -3,13 +3,32 @@ import "./App.css";
 
 // 1. Define the shape of your data. 
 // This must match your C# Concert class properties exactly.
-interface Concert {
-    id: number;
-    headLiner: string;
-    bands: string;
+export interface Concert {
+    id: number;      
     venue: string;
-    date: string;
+    date: string;         
+    price: number;
+    genres: string;
+    description: string;
+    sold_out: boolean;  
+
+    bands: string;
+    headliner: string;
+    openers: string;
 }
+
+export interface Ticket {
+    id: number;
+    concertId: number; 
+    userId: number;     
+    price: number;
+    description: string;
+    concert?: Concert; //connection to concert to know name
+}
+
+
+
+
 
 interface ConcertTicketProps {
     concertId: number;
@@ -25,7 +44,7 @@ function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
 
     return (
         <div>
-            <h5>{concert.headLiner}</h5>
+            <h5>{concert.headliner}</h5>
         </div>
     )
 }
@@ -82,7 +101,7 @@ export default function App() {
                                     boxShadow: '2px 2px 10px rgba(0,0,0,0.05)'
                                 }}
                             >
-                                <h2 style={{ margin: '0' }}>{item.headLiner}</h2>
+                                <h2 style={{ margin: '0' }}>{item.headliner}</h2>
                                 <p style={{ color: '#555' }}>Openers: {item.bands}</p>
                                 <p style={{ color: '#555' }}>Venue: {item.venue}</p>
                                 <small>Date: {new Date(item.date).toLocaleDateString()}</small>
