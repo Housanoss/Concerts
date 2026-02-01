@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
+import "./App.css"; 
 
 // 1. Define the shape of your data. 
 // This must match your C# Concert class properties exactly.
@@ -8,6 +9,25 @@ interface Concert {
     bands: string;
     venue: string;
     date: string;
+}
+
+interface ConcertTicketProps {
+    concertId: number;
+    concerts: Concert[];
+} //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného id
+
+function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
+    const concert = concerts.find(c => c.id === concertId);
+
+    if (!concert) {
+        return <p>Concert with ID {concertId} not found.</p>;
+    }
+
+    return (
+        <div>
+            <h5>{concert.headLiner}</h5>
+        </div>
+    )
 }
 
 export default function App() {
@@ -39,9 +59,9 @@ export default function App() {
     if (loading) return <div style={{ padding: '20px' }}>Connecting to API...</div>;
 
     return (
-        <div style={{display:'flex', flexDirection:'row'} }>
+        <div className= 'page'>
             <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif' }}>
-                <h1>TicketMaster Clone</h1>
+                <h1>The Ticket Stand</h1>
                 <p>Current Shows Available:</p>
                 <hr />
                 <button className = "filterBtn">Filter</button>
@@ -71,8 +91,13 @@ export default function App() {
                     </div>
                 )}
             </div>
-            <div>
-                tutaj budó listky
+            <div className='leftSpace'>
+                <div className='topBtns'>
+                    <button className='loginBtn'>Log In</button>
+                    <button className='signupBtn'>Sign Up</button>
+                </div>
+                <ConcertTicket concertId={3}
+                    concerts={concerts}/>
             </div>
         </div>
     );

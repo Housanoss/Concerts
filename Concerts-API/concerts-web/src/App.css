@@ -1,4 +1,13 @@
-.main{
+.page{
     display:flex;
     flex-direction:row;
+    width: 100vw;
+}
+
+.leftSpace {
+    padding-top: 75px;
+}
+
+button {
+    margin: 10px;
 }
