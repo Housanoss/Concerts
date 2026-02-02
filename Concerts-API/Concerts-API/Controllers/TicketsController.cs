@@ -16,7 +16,7 @@ namespace Concerts_API.Controllers
             _context = context;
         }
 
-        // GET: api/tickets/user/1
+        
         // Filters tickets by the UserId column
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetUserTickets(int userId)

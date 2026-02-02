@@ -60,5 +60,17 @@ namespace Concerts_API.Controllers
                 return StatusCode(500, $"Database Error: {ex.Message}");
             }
         }
+        //Loads tickets to buy for one chosen concert
+        [HttpGet("available/{concertId}")]
+        public async Task<ActionResult<IEnumerable<Ticket>>> GetAvailableTickets(int concertId)
+        {
+            
+            var ticketsToBuy = await _context.Tickets
+                .Where(t => t.ConcertId == concertId && t.UserId == 1)
+                .ToListAsync();
+
+            
+            return Ok(ticketsToBuy);
+        }
     }
 }
