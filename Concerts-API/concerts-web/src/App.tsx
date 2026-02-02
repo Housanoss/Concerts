@@ -1,5 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
+import { Link } from "react-router-dom";
+import SignIn from "./Components/SignIn";
+
 
 // 1. Define the shape of your data. 
 // This must match your C# Concert class properties exactly.
@@ -107,8 +110,12 @@ export default function App() {
             </div>
             <div className='leftSpace'>
                 <div className='topBtns'>
-                    <button className='loginBtn'>Log In</button>
-                    <button className='signupBtn'>Sign Up</button>
+                    <Link to="/signin">
+                        <button className="signInBtn">Sign In</button>
+                    </Link>
+                    <Link to="/signup">
+                        <button className="signUpBtn">Sign Up</button>
+                    </Link>
                 </div>
                 <ConcertTicket concertId={3}
                     concerts={concerts} />
