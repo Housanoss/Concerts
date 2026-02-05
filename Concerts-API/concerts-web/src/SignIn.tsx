@@ -39,7 +39,7 @@ const SignIn = () => {
                     required
                 />
 
-                <button type="submit" className="submit-btn">"Log in" </button>
+                <button type="submit" className="submit-btn">Log in </button>
             </form>
 
             {/* Bottom switch */}
