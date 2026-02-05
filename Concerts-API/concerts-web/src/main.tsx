@@ -2,7 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import SignIn from "./Components/SignIn.tsx";
+import SignIn from "./SignIn.tsx";
+import SignUp from "./SignUp.tsx";
 import App from './App.tsx'
 
 
@@ -12,6 +13,7 @@ function AppRoute() {
             <Routes>
                 <Route path="/" element={<App />} />
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
             </Routes>
         </BrowserRouter>
     );

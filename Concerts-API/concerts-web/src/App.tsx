@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
 import { Link } from "react-router-dom";
-import SignIn from "./Components/SignIn";
+
 
 
 // 1. Define the shape of your data. 
@@ -17,7 +17,7 @@ interface Concert {
 interface ConcertTicketProps {
     concertId: number;
     concerts: Concert[];
-} //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného id
+} //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného  
 
 function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
@@ -108,7 +108,7 @@ export default function App() {
                     </div>
                 )}
             </div>
-            <div className='leftSpace'>
+            <div className='rightSpace'>
                 <div className='topBtns'>
                     <Link to="/signin">
                         <button className="signInBtn">Sign In</button>
@@ -117,7 +117,7 @@ export default function App() {
                         <button className="signUpBtn">Sign Up</button>
                     </Link>
                 </div>
-                <ConcertTicket concertId={3}
+                <ConcertTicket concertId={3} 
                     concerts={concerts} />
 
                 <ConcertInfo concertId={2}

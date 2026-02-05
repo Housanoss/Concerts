@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import '../SignUp.css'; // We will create this styling file next
+import './SignUp.css'; // We will create this styling file next
+import { Link } from "react-router-dom";
 
 const SignUp = () => {
     // STATE: This holds the values the user types
-    const [isLogin, setIsLogin] = useState(false); // Toggle between Login and Sign Up
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,20 +19,6 @@ const SignUp = () => {
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
 
-            {/* Toggle Buttons */}
-            <div className="toggle-container">
-                <span
-                    className={isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(true)}>
-                    Log in
-                </span>
-                <span
-                    className={!isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(false)}>
-                    Sign up
-                </span>
-            </div>
-
             {/* The Form */}
             <form onSubmit={handleSubmit} className="auth-form">
                 <input
@@ -43,14 +29,14 @@ const SignUp = () => {
                 />
 
                 {/* Only show Email if we are signing up */}
-                {!isLogin && (
-                    <input
-                        type="email"
-                        placeholder="E-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                )}
+
+                <input
+                    type="email"
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
 
                 <input
                     type="password"
@@ -60,9 +46,17 @@ const SignUp = () => {
                 />
 
                 <button type="submit" className="submit-btn">
-                    {isLogin ? "Log in" : "Sign up"}
+                    Sign up
                 </button>
             </form>
+
+            <span>
+                Already have an account?
+                <Link to="/signin">
+                    <button className="signInBtn">Sign In</button>
+                </Link>
+            </span>
+
         </div>
     );
 };
