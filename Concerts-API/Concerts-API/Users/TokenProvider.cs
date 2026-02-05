@@ -29,7 +29,7 @@ internal sealed class TokenProvider(IConfiguration configuration)
             Audience = configuration["Jwt:Audience"]
         };
 
-        var handler = new JsonWebTokenHandler();
+        var handler = new JsonWebTokenHandler();//
 
         string token = handler.CreateToken(tokenDescriptor);
 
