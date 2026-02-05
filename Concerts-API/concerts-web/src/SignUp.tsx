@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import '../SignUp.css'; // We will create this styling file next
+import './SignUp.css'; // We will create this styling file next
+import { Link } from "react-router-dom";
 
 const SignUp = () => {
     // STATE: This holds the values the user types
@@ -14,14 +15,9 @@ const SignUp = () => {
         alert(`Welcome, ${username}!`);
     };
 
-
+    return (
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
-
-            
-                <span>
-                    Sign up
-                </span>
 
             {/* The Form */}
             <form onSubmit={handleSubmit} className="auth-form">
@@ -34,13 +30,13 @@ const SignUp = () => {
 
                 {/* Only show Email if we are signing up */}
 
-                    <input
-                        type="email"
-                        placeholder="E-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                
+                <input
+                    type="email"
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+
 
                 <input
                     type="password"
@@ -50,11 +46,19 @@ const SignUp = () => {
                 />
 
                 <button type="submit" className="submit-btn">
-                Sign up
+                    Sign up
                 </button>
             </form>
+
+            <span>
+                Already have an account?
+                <Link to="/signin">
+                    <button className="signInBtn">Sign In</button>
+                </Link>
+            </span>
+
         </div>
-   
+    );
 };
 
 export default SignUp;

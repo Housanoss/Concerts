@@ -117,7 +117,7 @@ export default function App() {
                         <button className="signUpBtn">Sign Up</button>
                     </Link>
                 </div>
-                <ConcertTicket concertId={3}
+                <ConcertTicket concertId={3} 
                     concerts={concerts} />
 
                 <ConcertInfo concertId={2}

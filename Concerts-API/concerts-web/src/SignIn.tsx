@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import '../SignIn.css';
+import './SignIn.css';
+import { Link } from "react-router-dom";
 
 const SignIn = () => {
 
@@ -16,21 +17,19 @@ const SignIn = () => {
         
     };
 
-
+    return (
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
-            <h2>"Log in"</h2>
-
             <form onSubmit={handleSubmit} className="auth-form">
 
-                    <input
-                        type="email"
-                        placeholder="E-mail"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                )
+                <input
+                    type="email"
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                
 
                 <input
                     type="password"
@@ -44,20 +43,17 @@ const SignIn = () => {
             </form>
 
             {/* Bottom switch */}
-            <div className="auth-footer">
-                
-                    <p>
-                        Nemáš úèet?{" "}
-                        <span
-                            className="auth-link"
-                        >
-                            Vytvoøit úèet
-                        </span>
-                    </p>
-                
-            </div>
+
+            <span>Don't have an account?
+                <Link to="/signup">
+                <button className="signUpBtn">Register</button>
+                </Link>
+            </span>
+
+
+
         </div>
-   
+    );
 };
 
 export default SignIn;
