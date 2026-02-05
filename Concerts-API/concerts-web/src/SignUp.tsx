@@ -14,17 +14,14 @@ const SignUp = () => {
         alert(`Welcome, ${username}!`);
     };
 
-    return (
+
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
 
-            {/* Toggle Buttons */}
-            <div className="toggle-container">
-
+            
                 <span>
                     Sign up
                 </span>
-            </div>
 
             {/* The Form */}
             <form onSubmit={handleSubmit} className="auth-form">
@@ -57,7 +54,7 @@ const SignUp = () => {
                 </button>
             </form>
         </div>
-    );
+   
 };
 
 export default SignUp;
