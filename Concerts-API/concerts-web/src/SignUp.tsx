@@ -3,7 +3,6 @@ import '../SignUp.css'; // We will create this styling file next
 
 const SignUp = () => {
     // STATE: This holds the values the user types
-    const [isLogin, setIsLogin] = useState(false); // Toggle between Login and Sign Up
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,14 +20,8 @@ const SignUp = () => {
 
             {/* Toggle Buttons */}
             <div className="toggle-container">
-                <span
-                    className={isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(true)}>
-                    Log in
-                </span>
-                <span
-                    className={!isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(false)}>
+
+                <span>
                     Sign up
                 </span>
             </div>
@@ -43,14 +36,14 @@ const SignUp = () => {
                 />
 
                 {/* Only show Email if we are signing up */}
-                {!isLogin && (
+
                     <input
                         type="email"
                         placeholder="E-mail"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                )}
+                
 
                 <input
                     type="password"
@@ -60,7 +53,7 @@ const SignUp = () => {
                 />
 
                 <button type="submit" className="submit-btn">
-                    {isLogin ? "Log in" : "Sign up"}
+                Sign up
                 </button>
             </form>
         </div>

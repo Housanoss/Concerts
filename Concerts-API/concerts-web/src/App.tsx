@@ -17,7 +17,7 @@ interface Concert {
 interface ConcertTicketProps {
     concertId: number;
     concerts: Concert[];
-} //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného id
+} //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného  
 
 function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);

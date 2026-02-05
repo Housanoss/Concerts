@@ -22,15 +22,7 @@ const SignIn = () => {
             <h2>"Log in"</h2>
 
             <form onSubmit={handleSubmit} className="auth-form">
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                />
 
-                {isRegister && (
                     <input
                         type="email"
                         placeholder="E-mail"
@@ -53,27 +45,19 @@ const SignIn = () => {
 
             {/* Bottom switch */}
             <div className="auth-footer">
-                {!isRegister ? (
+                
                     <p>
                         Nemáš úèet?{" "}
                         <span
                             className="auth-link"
-                            onClick={() => setIsRegister(true)}
                         >
                             Vytvoøit úèet
                         </span>
                     </p>
-                ) : (
-                    <p>
-                        Už máš úèet?{" "}
-                        <span className="auth-link" onClick={() => setIsRegister(false)}>
-                            <button>Pøihlásit se</button>
-                        </span>
-                    </p>
-                )}
+                
             </div>
         </div>
-    );
+   
 };
 
 export default SignIn;
