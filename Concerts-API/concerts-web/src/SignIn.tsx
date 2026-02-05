@@ -2,28 +2,24 @@ import React, { useState } from 'react';
 import '../SignIn.css';
 
 const SignIn = () => {
-    const [isRegister, setIsRegister] = useState(false);
 
-    const [username, setUsername] = useState('');
+    const [username] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (isRegister) {
-            console.log("Register:", { username, email, password });
-            alert(`Account created for ${username}`);
-        } else {
-            console.log("Login:", { username, password });
+ 
+            console.log("Login:", { email, password });
             alert(`Welcome back, ${username}`);
-        }
+        
     };
 
-    return (
+
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
-            <h2>{isRegister ? "Create account" : "Log in"}</h2>
+            <h2>"Log in"</h2>
 
             <form onSubmit={handleSubmit} className="auth-form">
                 <input
@@ -42,7 +38,7 @@ const SignIn = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                     />
-                )}
+                )
 
                 <input
                     type="password"
@@ -52,9 +48,7 @@ const SignIn = () => {
                     required
                 />
 
-                <button type="submit" className="submit-btn">
-                    {isRegister ? "Sign up" : "Log in"}
-                </button>
+                <button type="submit" className="submit-btn">"Log in" </button>
             </form>
 
             {/* Bottom switch */}
