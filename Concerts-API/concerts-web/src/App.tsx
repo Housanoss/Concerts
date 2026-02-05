@@ -1,8 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
 import { Link } from "react-router-dom";
-import SignIn from "./Components/SignIn";
-import SignIn from "./Components/SignIn.tsx";
+
 
 
 // 1. Define the shape of your data. 
@@ -109,7 +108,7 @@ export default function App() {
                     </div>
                 )}
             </div>
-            <div className='leftSpace'>
+            <div className='rightSpace'>
                 <div className='topBtns'>
                     <Link to="/signin">
                         <button className="signInBtn">Sign In</button>
