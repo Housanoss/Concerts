@@ -16,40 +16,75 @@ namespace Concerts_API.Controllers
             _context = context;
         }
 
-        
-        // Filters tickets by the UserId column
         [HttpGet("user/{userId}")]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetUserTickets(int userId)
+        public async Task<ActionResult<IEnumerable<object>>> GetUserTickets(int userId)
         {
-            var userTickets = await _context.Tickets
-                // Load the Concert info so we see "Sabaton" instead of just "1"
-                .Include(t => t.Concert)
+            // 1. Stáhneme lístky z DB v?etn? informací o koncertu
+            var rawTickets = await _context.Tickets
+                .Include(t => t.Concert) //P?ipojí tabulku Concerts
                 .Where(t => t.UserId == userId)
                 .ToListAsync();
 
-            if (userTickets == null || !userTickets.Any())
+            if (rawTickets == null || !rawTickets.Any())
             {
-                return Ok(new List<Ticket>()); // Return empty list instead of 404
+                return Ok(new List<object>());
             }
 
-            return Ok(userTickets);
+            // 2. Upraveni dat 
+            var formattedTickets = rawTickets.Select(t =>
+            {
+                var c = t.Concert;
+
+                //overeni ze existuje
+                if (c == null) return null;
+
+                //ROZD?LENÍ KAPEL (zkopírováno z ConcertsController)
+                var splitBands = string.IsNullOrEmpty(c.Bands)
+                    ? new List<string>()
+                    : c.Bands.Split(',').Select(b => b.Trim()).ToList();
+
+                var dynamicHeadliner = splitBands.FirstOrDefault() ?? "TBA";
+                var dynamicOpeners = string.Join(", ", splitBands.Skip(1));
+
+                // 3.  Data lístku + Data koncertu
+                return new
+                {
+                    // Info o lístku
+                    TicketId = t.Id,
+                    UserId = t.UserId,
+
+                    // Info o koncertu
+                    ConcertId = c.Id,
+                    Venue = c.Venue,
+                    Date = c.Date,
+                    Price = c.Price,
+                    Description = c.Description,
+                    SoldOut = c.Sold_out,
+
+                    // Naformátované kapely
+                    Headliner = dynamicHeadliner,
+                    Openers = dynamicOpeners
+                };
+            })
+            .Where(x => x != null) // Odfiltruje null hodnoty
+            .ToList();
+
+            return Ok(formattedTickets);
         }
 
-        // POST: api/tickets/purchase
-        // Saves a new ticket to the database
+
         [HttpPost("purchase")]
         public async Task<ActionResult<Ticket>> PurchaseTicket([FromBody] Ticket ticket)
         {
             try
             {
-                // Safety Check: Ensure the Concert exists before selling a ticket
+                // Kontrola existence koncertu
                 var concertExists = await _context.Concerts.AnyAsync(c => c.Id == ticket.ConcertId);
                 if (!concertExists)
                 {
                     return BadRequest("The selected concert does not exist.");
                 }
 
-                // Add and Save
                 _context.Tickets.Add(ticket);
                 await _context.SaveChangesAsync();
 
@@ -59,6 +94,22 @@ namespace Concerts_API.Controllers
             {
                 return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
+        }
+
+        // DELETE: Storno lístku
+        [HttpDelete("{ticketId}")]
+        public async Task<IActionResult> DeleteTicket(int ticketId)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null)
+            {
+                return NotFound("Ticket not found");
+            }
+
+            _context.Tickets.Remove(ticket);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Ticket was cancelled." });
         }
     }
 }
