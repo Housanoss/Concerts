@@ -2,6 +2,7 @@
 import "./App.css";
 import { Link } from "react-router-dom";
 import SignIn from "./Components/SignIn";
+import SignIn from "./Components/SignIn.tsx";
 
 
 // 1. Define the shape of your data. 
