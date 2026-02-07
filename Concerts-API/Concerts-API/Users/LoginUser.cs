@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Concerts_API.Users;
 
-internal sealed class LoginUser
+public sealed class LoginUser
 {
     private readonly WebDbContext _context;
     private readonly PasswordHasher _passwordHasher;

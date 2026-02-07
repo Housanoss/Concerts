@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Concerts_API.Users;
 
-internal sealed class TokenProvider(IConfiguration configuration)
+public sealed class TokenProvider(IConfiguration configuration)
 {
     public string Create(User user)
     {

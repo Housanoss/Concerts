@@ -16,6 +16,7 @@ builder.Services.AddDbContext<WebDbContext>(options =>
 builder.Services.AddScoped<TokenProvider>();
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<LoginUser>();
+builder.Services.AddScoped<RegisterUser>();
 
 // 3. Konfigurace JWT Autentizace
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
