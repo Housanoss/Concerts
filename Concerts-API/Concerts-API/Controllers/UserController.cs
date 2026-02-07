@@ -1,10 +1,13 @@
 ﻿using Concerts_API.Users;
 using Microsoft.AspNetCore.Mvc;
+using Concerts_API.Entities;
+using Concerts_API.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Concerts_API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class UsersController : ControllerBase
 {
     // ==========================================

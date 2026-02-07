@@ -1,8 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
 import { Link } from "react-router-dom";
-
-
 /////////////////////////////////
 // 1. Define the shape of your data. 
 // This must match your C# Concert class properties exactly.
@@ -19,7 +17,9 @@ interface ConcertTicketProps {
     concerts: Concert[];
 } //slouží k tomu aby si fuknce ConcertTicket mohla najít koncert v poli podle zadaného
 
-interface TicketDto {
+
+/*
+interface Ticket {
     ticketId: number;
     userId: number;
     concertId: number;
@@ -30,7 +30,8 @@ interface TicketDto {
     soldOut: boolean;
     headliner: string;
     openers: string;
-}
+}*/
+
 ///////////////////
 function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
@@ -45,6 +46,7 @@ function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
         </div>
     )
 }
+
 
 function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
