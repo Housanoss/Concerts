@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 //  nastav v .env:
 // VITE_API_URL=https://localhost:5077
 //  musí odpovídat URL tvého backend serveru
-const API_BASE = import.meta.env.VITE_API_URL ?? 'https://localhost:5077';
+const API_BASE = import.meta.env.VITE_API_URL ?? 'https://localhost:7231';
 
 const SignIn = () => {
     const [email, setEmail] = useState('');

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
 import { Link } from "react-router-dom";
+import SideTicketList from './Components/TicketSideList.tsx';
 
 interface Concert {
     id: number;
@@ -29,7 +30,7 @@ interface Ticket{
     headliner: string;
     openers: string;
 }*/
-
+/*
 function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
 
@@ -43,7 +44,7 @@ function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
             <p>{concert.venue}</p>
         </div>
     );
-}
+}*/
 
 function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
@@ -82,12 +83,17 @@ export default function App() {
                 setLoading(false);
             });
     }, []);
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        window.location.reload();
+    };
 
     if (loading) return <div style={{ padding: '20px' }}>Connecting to API...</div>;
 
     return (
         <div className='page'>
-            <div style={{ padding: '40px', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ fontFamily: 'Arial, sans-serif', flex: 2, marginRight:'40px'}}>
                 <h1>The Ticket Stand</h1>
                 <hr />
                 <p>Current Shows Available:</p>
@@ -117,11 +123,17 @@ export default function App() {
                     <Link to="/signup">
                         <button className="signUpBtn">Sign Up</button>
                     </Link>
+                    <button
+                        onClick={handleLogout}
+                        className="logoutBtn"
+                    >
+                        Log Out
+                    </button>
                 </div>
 
                 {/* Tohle může zůstat, pokud chceš třeba "vybraný" koncert */}
-                <ConcertTicket concertId={3} concerts={concerts} />
-
+                {/*<ConcertTicket concertId={3} concerts={concerts} />*/}
+                <SideTicketList />
                 {/* Tohle už není potřeba, protože se renderuje nahoře pro všechny */}
                 {/* <ConcertInfo concertId={2} concerts={concerts} /> */}
             </div>

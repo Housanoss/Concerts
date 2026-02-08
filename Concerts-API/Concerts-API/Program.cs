@@ -85,7 +85,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowReactApp");
+app.UseCors("AllowAll");
 
 app.UseAuthentication(); // PŘIDAT: Musí být PŘED UseAuthorization
 app.UseAuthorization();

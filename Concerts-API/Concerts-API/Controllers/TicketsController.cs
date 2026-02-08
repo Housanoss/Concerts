@@ -1,7 +1,8 @@
+﻿using Concerts_API.Data;
+using Concerts_API.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Concerts_API.Data;
-using Concerts_API.Entities;
+using System.Security.Claims;
 
 namespace Concerts_API.Controllers
 {
@@ -16,29 +17,51 @@ namespace Concerts_API.Controllers
             _context = context;
         }
 
-        [HttpGet("user/{userId}")]
+        [HttpGet("mine")]
         public async Task<ActionResult<IEnumerable<object>>> GetUserTickets(int userId)
         {
-            // 1. St�hneme l�stky z DB v?etn? informac� o koncertu
+            // --- DEBUG VÝPIS DO KONZOLE SERVERU ---
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("id")?.Value;
+
+            Console.WriteLine($"--------------------------------------------------");
+            Console.WriteLine($"[DEBUG] Kdo volá API? ID string z tokenu je: '{userIdString}'");
+
+            // Přejmenovali jsme proměnnou na 'parsedUserId', aby se nehádala s jinými
+            if (!int.TryParse(userIdString, out int parsedUserId))
+            {
+                Console.WriteLine($"[DEBUG] CHYBA: Nedokázal jsem převést '{userIdString}' na číslo (int)!");
+                return Unauthorized("Token neobsahuje platné ID uživatele.");
+            }
+
+            // Teď už víme, že ID je číslo, podíváme se do DB
+            var ticketCount = await _context.Tickets.CountAsync(t => t.UserId == parsedUserId);
+            Console.WriteLine($"[DEBUG] ID je {parsedUserId}. Počet lístků v DB pro toto ID: {ticketCount}");
+
+            // Pro jistotu vypíšeme, komu lístky patří
+            var existingIds = await _context.Tickets.Select(t => t.UserId).Distinct().ToListAsync();
+            Console.WriteLine($"[DEBUG] V DB existují lístky jen pro tato UserId: {string.Join(", ", existingIds)}");
+            Console.WriteLine($"--------------------------------------------------");
+            // ---------------------------------------
+
             var rawTickets = await _context.Tickets
-                .Include(t => t.Concert) //P?ipoj� tabulku Concerts
-                .Where(t => t.UserId == userId)
-                .ToListAsync();
+                    .Include(t => t.Concert)
+                    .Where(t => t.UserId == parsedUserId)
+                    .ToListAsync();
 
             if (rawTickets == null || !rawTickets.Any())
             {
+                // Vrátíme 200 OK, ale prázdný seznam (žádné lístky)
                 return Ok(new List<object>());
             }
 
-            // 2. Upraveni dat 
+            // 3. Formátování (stejné jako předtím)
             var formattedTickets = rawTickets.Select(t =>
             {
                 var c = t.Concert;
-
-                //overeni ze existuje
                 if (c == null) return null;
 
-                //ROZD?LEN� KAPEL (zkop�rov�no z ConcertsController)
                 var splitBands = string.IsNullOrEmpty(c.Bands)
                     ? new List<string>()
                     : c.Bands.Split(',').Select(b => b.Trim()).ToList();
@@ -46,27 +69,21 @@ namespace Concerts_API.Controllers
                 var dynamicHeadliner = splitBands.FirstOrDefault() ?? "TBA";
                 var dynamicOpeners = string.Join(", ", splitBands.Skip(1));
 
-                // 3.  Data l�stku + Data koncertu
                 return new
                 {
-                    // Info o l�stku
                     TicketId = t.Id,
                     UserId = t.UserId,
-
-                    // Info o koncertu
                     ConcertId = c.Id,
                     Venue = c.Venue,
                     Date = c.Date,
                     Price = c.Price,
                     Description = c.Description,
                     SoldOut = c.Sold_out,
-
-                    // Naform�tovan� kapely
                     Headliner = dynamicHeadliner,
                     Openers = dynamicOpeners
                 };
             })
-            .Where(x => x != null) // Odfiltruje null hodnoty
+            .Where(x => x != null)
             .ToList();
 
             return Ok(formattedTickets);
@@ -96,7 +113,7 @@ namespace Concerts_API.Controllers
             }
         }
 
-        // DELETE: Storno l�stku
+        // DELETE: Storno lístku
         [HttpDelete("{ticketId}")]
         public async Task<IActionResult> DeleteTicket(int ticketId)
         {
