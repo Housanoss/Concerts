@@ -16,7 +16,7 @@ interface ConcertTicketProps {
     concertId: number;
     concerts: Concert[];
 }
-
+/*
 interface Ticket{
     ticketId: number;
     userId: number;
@@ -28,7 +28,7 @@ interface Ticket{
     soldOut: boolean;
     headliner: string;
     openers: string;
-}
+}*/
 
 function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);

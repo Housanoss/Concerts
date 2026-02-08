@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+Ôªøimport React, { useState } from 'react';
 import './SignIn.css';
 import { Link, useNavigate } from "react-router-dom";
 
 //  nastav v .env:
 // VITE_API_URL=https://localhost:5077
-//  musÌ odpovÌdat URL tvÈho backend serveru
+//  mus√≠ odpov√≠dat URL tv√©ho backend serveru
 const API_BASE = import.meta.env.VITE_API_URL ?? 'https://localhost:5077';
 
 const SignIn = () => {
@@ -19,7 +19,7 @@ const SignIn = () => {
         e.preventDefault();
         setError(null);
 
-        //  Frontend validace p¯ed vol·nÌm backendu
+        //  Frontend validace p√∏ed vol√°n√≠m backendu
         if (!email.trim()) {
             setError("Email is required");
             return;
@@ -48,7 +48,28 @@ const SignIn = () => {
 
             const raw = await response.text();
 
-            let data: any = null;
+            interface LoginResponse {
+                // Z√°kladn√≠ vƒõci
+                token?: string;
+                error?: string;
+                Error?: string;
+                message?: string;
+
+                // Vƒõci, kter√© zkou≈°√≠≈° ƒç√≠st dole v k√≥du (p≈ôidej je sem):
+                Token?: string;
+                accessToken?: string;
+                jwt?: string;
+                username?: string;
+
+                // Objekt user, kter√Ω m√° v sobƒõ username nebo name
+                user?: {
+                    username?: string;
+                    name?: string;
+                };
+            }
+            let data: LoginResponse | null = null;
+            //let data: any = null;
+
             try {
                 data = raw ? JSON.parse(raw) : null;
             } catch {
@@ -69,7 +90,7 @@ const SignIn = () => {
                 return;
             }
 
-            //  token mapov·nÌ ó backend m˘ûe vracet r˘znÏ
+            //  token mapov√°n√≠ ‚Äî backend m√π≈æe vracet r√πzn√¨
             const token =
                 data?.Token ||
                 data?.token ||
@@ -82,10 +103,10 @@ const SignIn = () => {
                 return;
             }
 
-            //  uloûenÌ tokenu pro autorizaci dalöÌch request˘
+            //  ulo≈æen√≠ tokenu pro autorizaci dal≈°√≠ch request√π
             localStorage.setItem("token", token);
 
-            //  volitelnÏ uloûenÌ user info
+            //  voliteln√¨ ulo≈æen√≠ user info
             const username =
                 data?.username ??
                 data?.user?.username ??
@@ -94,16 +115,16 @@ const SignIn = () => {
 
             localStorage.setItem("username", username);
 
-            //  p¯esmÏrov·nÌ po loginu
+            //  p√∏esm√¨rov√°n√≠ po loginu
             navigate("/");
-            //  "/" by mÏla b˝t chr·nÏn· routa
+            //  "/" by m√¨la b√Ωt chr√°n√¨n√° routa
             // viz soubor:
             // src/components/RequireAuth.tsx
-            //  komponenta kter· kontroluje token
+            //  komponenta kter√° kontroluje token
 
         } catch (err) {
             console.error("LOGIN error:", err);
-            setError("Network / CORS error ó check backend & URL.");
+            setError("Network / CORS error ‚Äî check backend & URL.");
         } finally {
             setLoading(false);
         }

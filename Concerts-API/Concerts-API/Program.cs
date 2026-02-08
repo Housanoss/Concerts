@@ -15,6 +15,16 @@ var builder = WebApplication.CreateBuilder(args);
 // C#
 builder.Services.AddDbContext<WebDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        // ZDE MUSÍ BÝT PŘESNÁ ADRESA VAŠEHO REACTU (bez lomítka na konci)
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // 2. Registrace vašich služeb (Dependency Injection) - BEZ TOHO TO NEPUJDE
 builder.Services.AddScoped<TokenProvider>();
@@ -54,7 +64,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
         policy
-            .WithOrigins("http://localhost:5173")
+            .AllowAnyOrigin()
+            //.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
     );
@@ -74,12 +85,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowReactApp");
+
 app.UseAuthentication(); // PŘIDAT: Musí být PŘED UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();
-
-
 app.Run();
 
 public class WebDbContext : DbContext
