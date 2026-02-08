@@ -5,13 +5,20 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import SignIn from "./SignIn.tsx";
 import SignUp from "./SignUp.tsx";
 import App from './App.tsx'
-
+import RequireAuth from "./Components/RequireAuth.tsx";
 
 function AppRoute() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<App />} />
+                <Route
+                    path="/"
+                    element={
+                        <RequireAuth>
+                            <App />
+                        </RequireAuth>
+                    }
+                />
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
             </Routes>
