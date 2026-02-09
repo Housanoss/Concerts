@@ -32,5 +32,8 @@ namespace Concerts_API.Entities
         // Navigation property: One User has many Tickets
         [InverseProperty(nameof(Ticket.User))]
         public virtual ICollection<Ticket> Tickets { get; set; }
+
+        [Column("Role")]
+        public string Role { get; set; } = "User";
     }
 }

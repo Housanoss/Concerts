@@ -18,12 +18,19 @@ namespace Concerts_API.Controllers
 
         // GET: api/concerts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetConcert()
+        public async Task<ActionResult<IEnumerable<object>>> GetConcert(string? name)
         {
             try
             {
-                
-                var rawConcerts = await _context.Concerts.ToListAsync();
+
+                var query = _context.Concerts.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    query = query.Where(c => c.Bands.Contains(name));
+                }
+
+                var rawConcerts = await query.ToListAsync();
 
                
                 var formattedList = rawConcerts.Select(c =>
