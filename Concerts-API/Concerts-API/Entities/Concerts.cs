@@ -27,8 +27,8 @@ namespace Concerts_API.Entities
         public string Bands { get; set; }
 
         // Mapping decimal(10,0)
-        [Column("Price", TypeName = "decimal(10, 0)")]
-        public decimal Price { get; set; }
+        [Column("Price", TypeName = "varchar(255)")]
+        public string Price { get; set; }
 
         // Mapping tinyint(1) to bool is standard for MySQL connector
         [Column("Sold_out")]

@@ -1,12 +1,17 @@
-.page{
-    display:flex;
-    flex-direction:row;
-    width: 100vw;
+.page {
+    display: flex;
+    flex-direction: row;
+    
+    margin: 40px;
 }
 
 .leftSpace {
     padding-top: 75px;
+    padding-left: 20px;
+    flex:1;
+    
 }
+.
 
 button {
     margin: 10px;

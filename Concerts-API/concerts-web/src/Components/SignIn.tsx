@@ -1,54 +1,46 @@
 import React, { useState } from 'react';
-import '../SignIn.css'; // We will create this styling file next
+import '../SignIn.css';
 
 const SignIn = () => {
-    // STATE: This holds the values the user types
-    const [isLogin, setIsLogin] = useState(false); // Toggle between Login and Sign Up
+    const [isRegister, setIsRegister] = useState(false);
+
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // FUNCTION: What happens when they click the button?
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault(); // Prevents the page from reloading
-        console.log("Submitted:", { username, email, password });
-        alert(`Welcome, ${username}!`);
+        e.preventDefault();
+
+        if (isRegister) {
+            console.log("Register:", { username, email, password });
+            alert(`Account created for ${username}`);
+        } else {
+            console.log("Login:", { username, password });
+            alert(`Welcome back, ${username}`);
+        }
     };
 
     return (
         <div className="auth-container">
             <h1 className="title">THE TICKET STAND</h1>
+            <h2>{isRegister ? "Create account" : "Log in"}</h2>
 
-            {/* Toggle Buttons */}
-            <div className="toggle-container">
-                <span
-                    className={isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(true)}>
-                    Log in
-                </span>
-                <span
-                    className={!isLogin ? "active" : "inactive"}
-                    onClick={() => setIsLogin(false)}>
-                    Sign up
-                </span>
-            </div>
-
-            {/* The Form */}
             <form onSubmit={handleSubmit} className="auth-form">
                 <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    required
                 />
 
-                {/* Only show Email if we are signing up */}
-                {!isLogin && (
+                {isRegister && (
                     <input
                         type="email"
                         placeholder="E-mail"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        required
                     />
                 )}
 
@@ -57,12 +49,35 @@ const SignIn = () => {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                 />
 
                 <button type="submit" className="submit-btn">
-                    {isLogin ? "Log in" : "Sign up"}
+                    {isRegister ? "Sign up" : "Log in"}
                 </button>
             </form>
+
+            {/* Bottom switch */}
+            <div className="auth-footer">
+                {!isRegister ? (
+                    <p>
+                        Nemáš úèet?{" "}
+                        <span
+                            className="auth-link"
+                            onClick={() => setIsRegister(true)}
+                        >
+                            Vytvoøit úèet
+                        </span>
+                    </p>
+                ) : (
+                    <p>
+                        Už máš úèet?{" "}
+                        <span className="auth-link" onClick={() => setIsRegister(false)}>
+                            <button>Pøihlásit se</button>
+                        </span>
+                    </p>
+                )}
+            </div>
         </div>
     );
 };
