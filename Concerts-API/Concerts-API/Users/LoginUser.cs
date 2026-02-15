@@ -21,7 +21,10 @@ public sealed class LoginUser
     // Vstupní data (Email a Heslo)
     public sealed record Request(string Email, string Password);
 
-    public async Task<string> Handle(Request request)
+    // Výstupní data - vrátíme token + info o uživateli
+    public sealed record Response(string Token, string Username, string Email, int UserId);
+
+    public async Task<Response> Handle(Request request)
     {
         // 1. Najdeme uživatele podle emailu
         User? user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -33,18 +36,13 @@ public sealed class LoginUser
         }
 
         // 3. POJISTKA PRO STARÁ DATA
-        // Pokud máte v databázi uživatele vytvořené před změnou na hashování,
-        // nemají žádný hash (je null). Těm se nejde přihlásit.
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
             throw new Exception("Uživatel nemá nastavené bezpečné heslo (starý účet).");
         }
 
         // 4. OVĚŘENÍ HESLA
-        // Voláme metodu Verify z vašeho PasswordHasheru.
-        // DŮLEŽITÉ: První je heslo z formuláře, druhé je hash z databáze.
         bool verified = _passwordHasher.Verify(request.Password, user.PasswordHash);
-
         if (!verified)
         {
             throw new Exception("Nesprávný email nebo heslo.");
@@ -53,6 +51,12 @@ public sealed class LoginUser
         // 5. Pokud je vše OK, vygenerujeme token
         string token = _tokenProvider.Create(user);
 
-        return token;
+        // 6. Vrátíme token + informace o uživateli
+        return new Response(
+            Token: token,
+            Username: user.Username,  // nebo user.Name, podle toho co máte v User entity
+            Email: user.Email,
+            UserId: user.Id
+        );
     }
 }

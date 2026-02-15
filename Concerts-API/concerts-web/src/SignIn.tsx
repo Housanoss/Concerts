@@ -2,10 +2,7 @@
 import './SignIn.css';
 import { Link, useNavigate } from "react-router-dom";
 
-//  nastav v .env:
-// VITE_API_URL=https://localhost:5077
-//  musí odpovídat URL tvého backend serveru
-
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
@@ -19,7 +16,7 @@ const SignIn = () => {
         e.preventDefault();
         setError(null);
 
-        //  Frontend validace pøed voláním backendu
+        //  Frontend validace před voláním backendu
         if (!email.trim()) {
             setError("Email is required");
             return;
@@ -31,7 +28,11 @@ const SignIn = () => {
         }
 
         setLoading(true);
-        const targetUrl = "https://localhost:7231/api/users/login";
+        const targetUrl = `${API_BASE}/api/users/login`;
+
+        console.log("API_BASE:", API_BASE);
+        console.log("Target URL:", targetUrl);
+
         try {
             const response = await fetch(targetUrl, {
                 method: "POST",
@@ -44,8 +45,6 @@ const SignIn = () => {
                 }),
             });
 
-
-
             const raw = await response.text();
 
             interface LoginResponse {
@@ -55,20 +54,23 @@ const SignIn = () => {
                 Error?: string;
                 message?: string;
 
-                // Věci, které zkoušíš číst dole v kódu (přidej je sem):
+                // Token varianty
                 Token?: string;
                 accessToken?: string;
                 jwt?: string;
+
+                // Username a email
                 username?: string;
+                email?: string;
 
                 // Objekt user, který má v sobě username nebo name
                 user?: {
                     username?: string;
                     name?: string;
+                    email?: string;
                 };
             }
             let data: LoginResponse | null = null;
-            //let data: any = null;
 
             try {
                 data = raw ? JSON.parse(raw) : null;
@@ -90,7 +92,7 @@ const SignIn = () => {
                 return;
             }
 
-            //  token mapování — backend mùže vracet rùznì
+            //  token mapování — backend může vracet různě
             const token =
                 data?.Token ||
                 data?.token ||
@@ -103,24 +105,31 @@ const SignIn = () => {
                 return;
             }
 
-            //  uložení tokenu pro autorizaci dalších requestù
+            //  uložení tokenu pro autorizaci dalších requestů
             localStorage.setItem("token", token);
 
-            //  volitelnì uložení user info
+            //  uložení username (skutečné jméno uživatele)
             const username =
                 data?.username ??
                 data?.user?.username ??
                 data?.user?.name ??
-                email;
+                "User"; // fallback pokud backend nepošle username
 
             localStorage.setItem("username", username);
 
-            //  pøesmìrování po loginu
+            //  uložení emailu zvlášť
+            const userEmail =
+                data?.email ??
+                data?.user?.email ??
+                email;
+
+            localStorage.setItem("email", userEmail);
+
+            console.log("Stored username:", username);
+            console.log("Stored email:", userEmail);
+
+            //  přesměrování po loginu
             navigate("/");
-            //  "/" by mìla být chránìná routa
-            // viz soubor:
-            // src/components/RequireAuth.tsx
-            //  komponenta která kontroluje token
 
         } catch (err) {
             console.error("LOGIN error:", err);

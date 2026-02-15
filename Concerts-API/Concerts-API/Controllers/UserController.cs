@@ -1,7 +1,7 @@
 ﻿using Concerts_API.Data;
 using Concerts_API.Entities;
 using Concerts_API.Users;
-using Concerts_API.Users.Infrastructure; 
+using Concerts_API.Users.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,7 +13,7 @@ namespace Concerts_API.Controllers
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-       
+
         private readonly WebDbContext _context;
         private readonly PasswordHasher _passwordHasher;
         private readonly LoginUser _loginUser;
@@ -45,10 +45,11 @@ namespace Concerts_API.Controllers
             };
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync(); // Uložíme do DB
+            await _context.SaveChangesAsync();
 
             return Ok(new { message = "User registered successfully!" });
         }
+
         // LOGIN
         [HttpPost("login")]
         public async Task<ActionResult<object>> Login([FromBody] LoginRequest request)
@@ -56,10 +57,16 @@ namespace Concerts_API.Controllers
             try
             {
                 // Zavoláme vaši třídu LoginUser, která ověří heslo a vyrobí token
-                var token = await _loginUser.Handle(new LoginUser.Request(request.Email, request.Password));
+                var response = await _loginUser.Handle(new LoginUser.Request(request.Email, request.Password));
 
-                // Vrátíme token ve formátu JSON, aby ho React snadno přečetl
-                return Ok(new { token = token });
+                // Vrátíme token + informace o uživateli
+                return Ok(new
+                {
+                    token = response.Token,
+                    username = response.Username,
+                    email = response.Email,
+                    userId = response.UserId
+                });
             }
             catch (Exception ex)
             {
@@ -67,29 +74,108 @@ namespace Concerts_API.Controllers
                 return Unauthorized(new { error = ex.Message });
             }
         }
-        // update
-        [Authorize] // <--- Pustí jen přihlášené
-        [HttpPut("update")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
+
+        // GET CURRENT USER INFO
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
         {
-            // 1. Zjistíme ID přihlášeného uživatele z Tokenu
+            // Zjistíme ID přihlášeného uživatele z Tokenu
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
             if (userIdClaim == null) return Unauthorized();
 
             int userId = int.Parse(userIdClaim.Value);
 
-            // 2. Najdeme uživatele v databázi
+            // Najdeme uživatele v databázi
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound("User not found.");
 
-            // 3. BEZPEČNOST: Ověříme, že zadal správné aktuální heslo
+            // Vrátíme základní info
+            return Ok(new
+            {
+                id = user.Id,
+                username = user.Username,
+                email = user.Email,
+                role = user.Role
+            });
+        }
+
+        // UPDATE CURRENT USER
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateCurrentUser([FromBody] UpdateCurrentUserRequest request)
+        {
+            // Zjistíme ID přihlášeného uživatele z Tokenu
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
+            if (userIdClaim == null) return Unauthorized();
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            // Najdeme uživatele v databázi
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            // Aktualizace údajů
+            bool changed = false;
+
+            // Změna jména
+            if (!string.IsNullOrEmpty(request.Username) && request.Username != user.Username)
+            {
+                user.Username = request.Username;
+                changed = true;
+            }
+
+            // Změna emailu
+            if (!string.IsNullOrEmpty(request.Email) && request.Email != user.Email)
+            {
+                // Kontrola, jestli email už nemá někdo jiný
+                if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != userId))
+                {
+                    return BadRequest(new { Error = "Email is already taken by someone else." });
+                }
+                user.Email = request.Email;
+                changed = true;
+            }
+
+            // Změna hesla (volitelné)
+            if (!string.IsNullOrEmpty(request.Password))
+            {
+                user.PasswordHash = _passwordHasher.Hash(request.Password);
+                changed = true;
+            }
+
+            // Uložíme změny pouze pokud se něco změnilo
+            if (changed)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Profile updated successfully!" });
+        }
+
+        // UPDATE (starý endpoint s CurrentPassword - můžeš si nechat oba)
+        [Authorize]
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
+        {
+            // Zjistíme ID přihlášeného uživatele z Tokenu
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
+            if (userIdClaim == null) return Unauthorized();
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            // Najdeme uživatele v databázi
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            // BEZPEČNOST: Ověříme, že zadal správné aktuální heslo
             bool isPasswordCorrect = _passwordHasher.Verify(request.CurrentPassword, user.PasswordHash);
             if (!isPasswordCorrect)
             {
                 return BadRequest(new { Error = "Wrong current password!" });
             }
 
-            // 4. Aktualizace údajů (jen pokud je vyplnil)
+            // Aktualizace údajů (jen pokud je vyplnil)
 
             // Změna jména
             if (!string.IsNullOrEmpty(request.NewUsername))
@@ -97,7 +183,7 @@ namespace Concerts_API.Controllers
                 user.Username = request.NewUsername;
             }
 
-            // Změna emailu (měli bychom zkontrolovat duplicitu, ale pro teď zjednodušeně)
+            // Změna emailu
             if (!string.IsNullOrEmpty(request.NewEmail))
             {
                 // Kontrola, jestli email už nemá někdo jiný
@@ -114,30 +200,39 @@ namespace Concerts_API.Controllers
                 user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
             }
 
-            // 5. Uložíme změny
+            // Uložíme změny
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Profile updated successfully!" });
         }
     }
 
-    // Pomocná třída pro data z formuláře
-    public class RegisterRequest // Register user
+    // Pomocné třídy pro data z formuláře
+    public class RegisterRequest
     {
         public string Username { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
     }
-    public class LoginRequest // Login user
+
+    public class LoginRequest
     {
         public string Email { get; set; }
         public string Password { get; set; }
     }
-    public class UpdateUserRequest // Update user
+
+    public class UpdateCurrentUserRequest
     {
-        public string CurrentPassword { get; set; } 
-        public string? NewUsername { get; set; }   
-        public string? NewEmail { get; set; }       
-        public string? NewPassword { get; set; }    
+        public string? Username { get; set; }
+        public string? Email { get; set; }
+        public string? Password { get; set; }
+    }
+
+    public class UpdateUserRequest
+    {
+        public string CurrentPassword { get; set; }
+        public string? NewUsername { get; set; }
+        public string? NewEmail { get; set; }
+        public string? NewPassword { get; set; }
     }
 }

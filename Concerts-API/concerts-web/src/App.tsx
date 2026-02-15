@@ -17,34 +17,6 @@ interface ConcertTicketProps {
     concertId: number;
     concerts: Concert[];
 }
-/*
-interface Ticket{
-    ticketId: number;
-    userId: number;
-    concertId: number;
-    venue: string;
-    date: string;
-    price: number;
-    description: string;
-    soldOut: boolean;
-    headliner: string;
-    openers: string;
-}*/
-/*
-function ConcertTicket({ concertId, concerts }: ConcertTicketProps) {
-    const concert = concerts.find(c => c.id === concertId);
-
-    if (!concert) return <p>Concert with ID {concertId} not found.</p>;
-
-    return (
-        <div>
-            <h5>{concert.headliner}</h5>
-            <p>{concert.openers}</p>
-            <p>{concert.date}</p>
-            <p>{concert.venue}</p>
-        </div>
-    );
-}*/
 
 function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
@@ -65,9 +37,17 @@ function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
 export default function App() {
     const [concerts, setConcerts] = useState<Concert[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [username, setUsername] = useState<string>("");
 
     useEffect(() => {
-        const API_URL = 'https://localhost:7231/api/concerts';
+        // Kontrola, zda je uživatel přihlášen
+        const token = localStorage.getItem("token");
+        const storedUsername = localStorage.getItem("username");
+        setIsLoggedIn(!!token);
+        setUsername(storedUsername || "");
+
+        const API_URL = `${import.meta.env.VITE_API_URL}/api/concerts`;
 
         fetch(API_URL)
             .then((res) => {
@@ -83,9 +63,12 @@ export default function App() {
                 setLoading(false);
             });
     }, []);
+
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
+        setIsLoggedIn(false);
+        setUsername("");
         window.location.reload();
     };
 
@@ -93,7 +76,7 @@ export default function App() {
 
     return (
         <div className='page'>
-            <div style={{ fontFamily: 'Arial, sans-serif', flex: 2, marginRight:'40px'}}>
+            <div style={{ fontFamily: 'Arial, sans-serif', flex: 2, marginRight: '40px' }}>
                 <h1>The Ticket Stand</h1>
                 <hr />
                 <p>Current Shows Available:</p>
@@ -117,25 +100,32 @@ export default function App() {
 
             <div className='rightSpace'>
                 <div className='topBtns'>
-                    <Link to="/signin">
-                        <button className="signInBtn">Sign In</button>
-                    </Link>
-                    <Link to="/signup">
-                        <button className="signUpBtn">Sign Up</button>
-                    </Link>
-                    <button
-                        onClick={handleLogout}
-                        className="logoutBtn"
-                    >
-                        Log Out
-                    </button>
+                    {!isLoggedIn && (
+                        <>
+                            <Link to="/signin">
+                                <button className="signInBtn">Sign In</button>
+                            </Link>
+                            <Link to="/signup">
+                                <button className="signUpBtn">Sign Up</button>
+                            </Link>
+                        </>
+                    )}
+                    {isLoggedIn && (
+                        <>
+                            <Link to="/edituser">
+                                <span>{username}</span>
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="logoutBtn"
+                            >
+                                Log Out
+                            </button>
+                        </>
+                    )}
                 </div>
 
-                {/* Tohle může zůstat, pokud chceš třeba "vybraný" koncert */}
-                {/*<ConcertTicket concertId={3} concerts={concerts} />*/}
                 <SideTicketList />
-                {/* Tohle už není potřeba, protože se renderuje nahoře pro všechny */}
-                {/* <ConcertInfo concertId={2} concerts={concerts} /> */}
             </div>
         </div>
     );
