@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 //  nastav v .env:
 // VITE_API_URL=https://localhost:5077
 //  musí odpovídat URL tvého backend serveru
-const API_BASE = import.meta.env.VITE_API_URL ?? 'https://localhost:7231';
+
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
@@ -31,16 +31,16 @@ const SignIn = () => {
         }
 
         setLoading(true);
-
+        const targetUrl = "https://localhost:7231/api/users/login";
         try {
-            const response = await fetch("https://localhost:7231/api/users/login", {
+            const response = await fetch(targetUrl, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    email: email,
-                    password: password
+                    email,
+                    password
                 }),
             });
 

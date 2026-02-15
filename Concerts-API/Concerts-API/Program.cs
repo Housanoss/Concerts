@@ -2,12 +2,11 @@
 using Concerts_API.Entities;
 using Concerts_API.Users;
 using Concerts_API.Users.Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer; // TOTO VYŘEŠÍ CHYBU
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens; // TOTO VYŘEŠÍ CHYBU TokenValidationParameters
-using System.Reflection;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Reflection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,7 +69,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
     );
 });
+builder.Services.AddScoped<LoginUser>();
 
+builder.Services.AddScoped<Concerts_API.Users.Infrastructure.PasswordHasher>();
 
 var app = builder.Build();
 app.UseCors("Frontend");
