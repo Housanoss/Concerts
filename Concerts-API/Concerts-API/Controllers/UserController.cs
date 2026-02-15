@@ -13,7 +13,6 @@ namespace Concerts_API.Controllers
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-
         private readonly WebDbContext _context;
         private readonly PasswordHasher _passwordHasher;
         private readonly LoginUser _loginUser;
@@ -25,17 +24,15 @@ namespace Concerts_API.Controllers
             _loginUser = loginUser;
         }
 
-        // REGISTER
+        // --- REGISTRACE ---
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            // Kontrola, jestli uživatel už neexistuje
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
                 return BadRequest(new { Error = "Email is already taken." });
             }
 
-            // Vytvoření nového uživatele
             var user = new User
             {
                 Username = request.Username,
@@ -50,47 +47,41 @@ namespace Concerts_API.Controllers
             return Ok(new { message = "User registered successfully!" });
         }
 
-        // LOGIN
+        // --- PŘIHLÁŠENÍ ---
         [HttpPost("login")]
         public async Task<ActionResult<object>> Login([FromBody] LoginRequest request)
         {
             try
             {
-                // Zavoláme vaši třídu LoginUser, která ověří heslo a vyrobí token
                 var response = await _loginUser.Handle(new LoginUser.Request(request.Email, request.Password));
 
-                // Vrátíme token + informace o uživateli
                 return Ok(new
                 {
-                    token = response.Token,
-                    username = response.Username,
-                    email = response.Email,
-                    userId = response.UserId
+                    token = response, // Token je string
+                    // Pokud LoginUser vrací jen string, nemůžeme vrátit username/email/id.
+                    // Pokud jste LoginUser neupravoval, vrací jen token.
+                    // Pro jednoduchost teď vracíme jen token:
                 });
             }
             catch (Exception ex)
             {
-                // Když se nepovede přihlásit (špatné heslo atd.), vrátíme chybu 401
                 return Unauthorized(new { error = ex.Message });
             }
         }
 
-        // GET CURRENT USER INFO
+        // --- ZÍSKÁNÍ DAT O UŽIVATELI (ME) ---
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            // Zjistíme ID přihlášeného uživatele z Tokenu
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
             if (userIdClaim == null) return Unauthorized();
 
             int userId = int.Parse(userIdClaim.Value);
-
-            // Najdeme uživatele v databázi
             var user = await _context.Users.FindAsync(userId);
+
             if (user == null) return NotFound("User not found.");
 
-            // Vrátíme základní info
             return Ok(new
             {
                 id = user.Id,
@@ -100,114 +91,64 @@ namespace Concerts_API.Controllers
             });
         }
 
-        // UPDATE CURRENT USER
-        [Authorize]
-        [HttpPut("me")]
-        public async Task<IActionResult> UpdateCurrentUser([FromBody] UpdateCurrentUserRequest request)
-        {
-            // Zjistíme ID přihlášeného uživatele z Tokenu
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
-            if (userIdClaim == null) return Unauthorized();
-
-            int userId = int.Parse(userIdClaim.Value);
-
-            // Najdeme uživatele v databázi
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            // Aktualizace údajů
-            bool changed = false;
-
-            // Změna jména
-            if (!string.IsNullOrEmpty(request.Username) && request.Username != user.Username)
-            {
-                user.Username = request.Username;
-                changed = true;
-            }
-
-            // Změna emailu
-            if (!string.IsNullOrEmpty(request.Email) && request.Email != user.Email)
-            {
-                // Kontrola, jestli email už nemá někdo jiný
-                if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != userId))
-                {
-                    return BadRequest(new { Error = "Email is already taken by someone else." });
-                }
-                user.Email = request.Email;
-                changed = true;
-            }
-
-            // Změna hesla (volitelné)
-            if (!string.IsNullOrEmpty(request.Password))
-            {
-                user.PasswordHash = _passwordHasher.Hash(request.Password);
-                changed = true;
-            }
-
-            // Uložíme změny pouze pokud se něco změnilo
-            if (changed)
-            {
-                await _context.SaveChangesAsync();
-            }
-
-            return Ok(new { message = "Profile updated successfully!" });
-        }
-
-        // UPDATE (starý endpoint s CurrentPassword - můžeš si nechat oba)
+        // --- AKTUALIZACE PROFILU (Bezpečná verze) ---
         [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
         {
-            // Zjistíme ID přihlášeného uživatele z Tokenu
+            // 1. Identifikace uživatele
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
             if (userIdClaim == null) return Unauthorized();
-
             int userId = int.Parse(userIdClaim.Value);
 
-            // Najdeme uživatele v databázi
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound("User not found.");
 
-            // BEZPEČNOST: Ověříme, že zadal správné aktuální heslo
+            // 2. OVĚŘENÍ STARÉHO HESLA (Nutné!)
             bool isPasswordCorrect = _passwordHasher.Verify(request.CurrentPassword, user.PasswordHash);
             if (!isPasswordCorrect)
             {
-                return BadRequest(new { Error = "Wrong current password!" });
+                return BadRequest(new { Error = "Zadali jste špatné současné heslo." });
             }
 
-            // Aktualizace údajů (jen pokud je vyplnil)
+            // 3. Změny údajů
+            bool changed = false;
 
-            // Změna jména
             if (!string.IsNullOrEmpty(request.NewUsername))
             {
                 user.Username = request.NewUsername;
+                changed = true;
             }
 
-            // Změna emailu
-            if (!string.IsNullOrEmpty(request.NewEmail))
+            if (!string.IsNullOrEmpty(request.NewEmail) && request.NewEmail != user.Email)
             {
-                // Kontrola, jestli email už nemá někdo jiný
                 if (await _context.Users.AnyAsync(u => u.Email == request.NewEmail && u.Id != userId))
                 {
-                    return BadRequest(new { Error = "Email is already taken by someone else." });
+                    return BadRequest(new { Error = "Tento email už používá někdo jiný." });
                 }
                 user.Email = request.NewEmail;
+                changed = true;
             }
 
-            // Změna hesla
             if (!string.IsNullOrEmpty(request.NewPassword))
             {
                 user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+                changed = true;
             }
 
-            // Uložíme změny
-            await _context.SaveChangesAsync();
+            // 4. Uložení
+            if (changed)
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Profil byl úspěšně aktualizován!" });
+            }
 
-            return Ok(new { message = "Profile updated successfully!" });
+            return Ok(new { message = "Nic se nezměnilo." });
         }
     }
 
-    // Pomocné třídy pro data z formuláře
+    // --- DTO TŘÍDY (Obálky na data) ---
+
     public class RegisterRequest
     {
         public string Username { get; set; }
@@ -221,16 +162,10 @@ namespace Concerts_API.Controllers
         public string Password { get; set; }
     }
 
-    public class UpdateCurrentUserRequest
-    {
-        public string? Username { get; set; }
-        public string? Email { get; set; }
-        public string? Password { get; set; }
-    }
-
+    // Toto je ta BEZPEČNÁ verze, kterou jsme si nechali
     public class UpdateUserRequest
     {
-        public string CurrentPassword { get; set; }
+        public string CurrentPassword { get; set; } // Povinné pro ověření
         public string? NewUsername { get; set; }
         public string? NewEmail { get; set; }
         public string? NewPassword { get; set; }
