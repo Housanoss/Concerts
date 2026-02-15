@@ -1,54 +1,58 @@
-﻿using Concerts_API.Users;
-using Microsoft.AspNetCore.Mvc;
-using Concerts_API.Entities;
-using Concerts_API.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Concerts_API.Data;
+using Concerts_API.Entities;
+using Concerts_API.Users.Infrastructure; // Import pro PasswordHasher
 
-
-namespace Concerts_API.Controllers;
-
-[ApiExplorerSettings(IgnoreApi = true)]
-public class UsersController : ControllerBase
+namespace Concerts_API.Controllers
 {
-    // ==========================================
-    //  REGISTRACE
-    // ==========================================
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(
-        [FromBody] RegisterUser.Request request,   // (email, username, password)
-        [FromServices] RegisterUser registerUser)  // to zpracuje
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UsersController : ControllerBase
     {
-        try
+       
+        private readonly WebDbContext _context;
+        private readonly PasswordHasher _passwordHasher;
+
+        public UsersController(WebDbContext context, PasswordHasher passwordHasher)
         {
-            await registerUser.Handle(request);
-            return Ok(new { Message = "User registered successfully!" });
+            _context = context;
+            _passwordHasher = passwordHasher;
         }
-        catch (Exception ex)
+
+        // 3. Metoda pro REGISTRACI
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            // Pokud email už existuje, vrátíme chybu 400
-            return BadRequest(new { Error = ex.Message });
+            // Kontrola, jestli uživatel už neexistuje
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                return BadRequest(new { Error = "Email is already taken." });
+            }
+
+            // Vytvoření nového uživatele
+            var user = new User
+            {
+                Username = request.Username,
+                Email = request.Email,
+                Role = "User",
+                PasswordHash = _passwordHasher.Hash(request.Password)
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync(); // Uložíme do DB
+
+            return Ok(new { message = "User registered successfully!" });
         }
+
+        // Zde můžete nechat metodu Login, pokud ji už máte...
     }
 
-    // ==========================================
-    //  PŘIHLÁŠENÍ 
-    // =========================================
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(
-        [FromBody] LoginUser.Request request,      // (email, password)
-        [FromServices] LoginUser loginUser)        //ověří heslo a vyrobí token
+    // Pomocná třída pro data z formuláře
+    public class RegisterRequest
     {
-        try
-        {
-            string token = await loginUser.Handle(request);
-
-            // Vrátíme token v JSONu, aby si ho React mohl uložit
-            return Ok(new { Token = token });
-        }
-        catch (Exception ex)
-        {
-            // Pokud je špatné heslo nebo uživatel neexistuje
-            return BadRequest(new { Error = ex.Message });
-        }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 }

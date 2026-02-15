@@ -33,14 +33,14 @@ const SignIn = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(`${API_BASE}/login`, {
+            const response = await fetch("https://localhost:7231/api/users/login", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    email,
-                    password
+                    email: email,
+                    password: password
                 }),
             });
 

@@ -33,7 +33,7 @@ public sealed class RegisterUser
         {
             Email = request.Email,
             Username = request.Username,
-            Password = _passwordHasher.Hash(request.Password) // Uložení hesla (zatím jen text, pokud nemáte hashování)
+            PasswordHash = _passwordHasher.Hash(request.Password) // Uložení hesla (zatím jen text, pokud nemáte hashování)
         };
 
         // 3. Uložení do DB

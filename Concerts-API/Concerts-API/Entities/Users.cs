@@ -27,7 +27,7 @@ namespace Concerts_API.Entities
 
         [Column("Password")]
         [StringLength(255)]
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
 
         // Navigation property: One User has many Tickets
         [InverseProperty(nameof(Ticket.User))]
