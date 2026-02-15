@@ -30,6 +30,8 @@ const EditUser = () => {
     const [password, setPassword] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
+    const [deleting, setDeleting] = useState<boolean>(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
@@ -186,6 +188,58 @@ const EditUser = () => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        if (!token) {
+            navigate("/signin");
+            return;
+        }
+
+        setDeleting(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`${API_BASE}/api/users/me`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log("Delete response status:", res.status);
+
+            const raw = await res.text();
+            console.log("Delete response body:", raw);
+
+            let data: ApiErrorResponse | null = null;
+            try {
+                data = raw ? JSON.parse(raw) : null;
+            } catch {
+                data = null;
+            }
+
+            if (!res.ok) {
+                const msg = data?.Error || data?.error || data?.message || `Delete failed (${res.status})`;
+                setError(msg);
+                return;
+            }
+
+            // Úspìšné smazání - vyèistit localStorage a pøesmìrovat
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            localStorage.removeItem("email");
+            navigate("/");
+        } catch (err) {
+            console.error("Delete user error:", err);
+            if (err instanceof Error) {
+                setError(`Network error: ${err.message}`);
+            }
+        } finally {
+            setDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
     if (loading) {
         return <div className="auth-container"><h1 className="title">Loading...</h1></div>;
     }
@@ -225,6 +279,66 @@ const EditUser = () => {
                     {saving ? "Saving..." : "Save changes"}
                 </button>
             </form>
+
+            {/* Delete Account Section */}
+            <div style={{ marginTop: "40px", borderTop: "1px solid #ddd", paddingTop: "20px" }}>
+                <h3 style={{ color: "#d32f2f" }}>Danger Zone</h3>
+
+                {!showDeleteConfirm ? (
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        style={{
+                            backgroundColor: "#d32f2f",
+                            color: "white",
+                            padding: "10px 20px",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "14px"
+                        }}
+                    >
+                        Delete Account
+                    </button>
+                ) : (
+                    <div>
+                        <p style={{ color: "#d32f2f", fontWeight: "bold" }}>
+                            Are you sure? This action cannot be undone!
+                        </p>
+                        <div style={{ display: "flex", gap: "10px" }}>
+                            <button
+                                onClick={handleDeleteAccount}
+                                disabled={deleting}
+                                style={{
+                                    backgroundColor: "#d32f2f",
+                                    color: "white",
+                                    padding: "10px 20px",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: deleting ? "not-allowed" : "pointer",
+                                    fontSize: "14px"
+                                }}
+                            >
+                                {deleting ? "Deleting..." : "Yes, Delete My Account"}
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                disabled={deleting}
+                                style={{
+                                    backgroundColor: "#666",
+                                    color: "white",
+                                    padding: "10px 20px",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    fontSize: "14px"
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -75,6 +75,28 @@ namespace Concerts_API.Controllers
             }
         }
 
+        // DELETE CURRENT USER
+        [Authorize]
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteCurrentUser()
+        {
+            // Zjistíme ID přihlášeného uživatele z Tokenu
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
+            if (userIdClaim == null) return Unauthorized();
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            // Najdeme uživatele v databázi
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            // Smažeme uživatele
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Account deleted successfully." });
+        }
+
         // GET CURRENT USER INFO
         [Authorize]
         [HttpGet("me")]
