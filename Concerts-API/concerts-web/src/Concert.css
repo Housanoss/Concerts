@@ -5,9 +5,71 @@
     font-family: Arial, sans-serif;
 }
 
+.concert-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ddd;
+}
+
+.user-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.username-display {
+    color: #0066cc;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+    .username-display:hover {
+        color: #0052a3;
+    }
+
+.signInBtn, .signUpBtn, .logoutBtn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.signInBtn {
+    background-color: #0066cc;
+    color: white;
+}
+
+    .signInBtn:hover {
+        background-color: #0052a3;
+    }
+
+.signUpBtn {
+    background-color: #28a745;
+    color: white;
+}
+
+    .signUpBtn:hover {
+        background-color: #218838;
+    }
+
+.logoutBtn {
+    background-color: #d32f2f;
+    color: white;
+}
+
+    .logoutBtn:hover {
+        background-color: #b71c1c;
+    }
+
 .concert-header {
     margin-bottom: 30px;
-    position: relative;
 }
 
 .back-button {
@@ -18,7 +80,6 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    margin-bottom: 20px;
 }
 
     .back-button:hover {

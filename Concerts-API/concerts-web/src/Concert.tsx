@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import './Concert.css';
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -34,6 +34,7 @@ const Concert = () => {
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
 
     const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
     const isLoggedIn = !!token;
 
     useEffect(() => {
@@ -45,7 +46,6 @@ const Concert = () => {
             console.log("API_BASE:", API_BASE);
 
             try {
-                // Fetch concert details
                 const concertUrl = `${API_BASE}/api/concerts/${id}`;
                 console.log("Fetching from:", concertUrl);
 
@@ -60,7 +60,6 @@ const Concert = () => {
                 console.log("Concert data:", concertData);
                 setConcert(concertData);
 
-                // Fetch all tickets for this concert
                 const ticketsUrl = `${API_BASE}/api/tickets/concert/${id}`;
                 console.log("Fetching tickets from:", ticketsUrl);
 
@@ -116,7 +115,6 @@ const Concert = () => {
 
             setPurchaseSuccess(`Successfully purchased ${ticketType} ticket for $${price}!`);
 
-            // Refresh tickets
             const ticketsRes = await fetch(`${API_BASE}/api/tickets/concert/${id}`);
             if (ticketsRes.ok) {
                 const ticketsData = await ticketsRes.json();
@@ -127,6 +125,13 @@ const Concert = () => {
             console.error("Purchase error:", err);
             setError(err instanceof Error ? err.message : "Failed to purchase ticket");
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        localStorage.removeItem("email");
+        window.location.reload();
     };
 
     if (loading) {
@@ -162,16 +167,40 @@ const Concert = () => {
         );
     }
 
-    // Separate available and sold tickets
     const availableTickets = allTickets.filter(ticket => !ticket.user_id || ticket.user_id === 0);
     const soldTickets = allTickets.filter(ticket => ticket.user_id && ticket.user_id !== 0);
 
     return (
         <div className="concert-container">
-            <div className="concert-header">
+            <div className="concert-top-bar">
                 <button onClick={() => navigate('/')} className="back-button">
                     Back to Concerts
                 </button>
+
+                <div className="user-controls">
+                    {!isLoggedIn ? (
+                        <>
+                            <Link to="/signin">
+                                <button className="signInBtn">Sign In</button>
+                            </Link>
+                            <Link to="/signup">
+                                <button className="signUpBtn">Sign Up</button>
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/edituser">
+                                <span className="username-display">{username}</span>
+                            </Link>
+                            <button onClick={handleLogout} className="logoutBtn">
+                                Log Out
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <div className="concert-header">
                 <h1>{concert.bands}</h1>
                 {concert.sold_out === 1 && (
                     <span className="sold-out-badge">SOLD OUT</span>
@@ -244,7 +273,6 @@ const Concert = () => {
                                 <table className="tickets-table">
                                     <thead>
                                         <tr>
-                                            <th>Ticket ID</th>
                                             <th>Type</th>
                                             <th>Price</th>
                                             <th>Action</th>
@@ -253,7 +281,6 @@ const Concert = () => {
                                     <tbody>
                                         {availableTickets.map((ticket) => (
                                             <tr key={ticket.id}>
-                                                <td>#{ticket.id}</td>
                                                 <td><span className={`ticket-type-badge ${ticket.type.toLowerCase()}`}>{ticket.type}</span></td>
                                                 <td>${ticket.price}</td>
                                                 <td>
@@ -279,7 +306,6 @@ const Concert = () => {
                                     <table className="tickets-table">
                                         <thead>
                                             <tr>
-                                                <th>Ticket ID</th>
                                                 <th>Type</th>
                                                 <th>Price</th>
                                                 <th>Status</th>
@@ -288,7 +314,6 @@ const Concert = () => {
                                         <tbody>
                                             {soldTickets.map((ticket) => (
                                                 <tr key={ticket.id} className="sold-ticket-row">
-                                                    <td>#{ticket.id}</td>
                                                     <td><span className={`ticket-type-badge ${ticket.type.toLowerCase()}`}>{ticket.type}</span></td>
                                                     <td>${ticket.price}</td>
                                                     <td><span className="sold-badge">SOLD</span></td>
