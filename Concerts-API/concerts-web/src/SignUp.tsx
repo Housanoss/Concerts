@@ -1,14 +1,15 @@
 ﻿import React, { useState } from 'react';
 import './SignUp.css';
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const SignUp = () => {
     // STATE
-    const [username, setUsername] = useState(''); // Username tu necháme
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(''); // State pro chyby
-
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     // FUNCTION
@@ -16,28 +17,34 @@ const SignUp = () => {
         e.preventDefault();
         setError('');
 
+        const registerUrl = `${API_BASE}/api/users/register`;
+        console.log("API_BASE:", API_BASE);
+        console.log("Register URL:", registerUrl);
+
         try {
-            const response = await fetch("https://localhost:7231/api/users/register", {
+            const response = await fetch(registerUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    username: username, // <--- POSÍLÁME USERNAME
+                    username: username,
                     email: email,
                     password: password
                 }),
             });
 
+            console.log("Response status:", response.status);
+
             if (response.ok) {
                 alert(`Welcome, ${username}! Please log in.`);
-                navigate("/signin"); // Přesměrování na login
+                navigate("/signin");
             } else {
                 const data = await response.json();
                 setError(data.message || data.Error || "Registration failed.");
             }
         } catch (err) {
-            console.error(err);
+            console.error("Registration error:", err);
             setError("Server connection failed.");
         }
     };
@@ -47,8 +54,6 @@ const SignUp = () => {
             <h1 className="title">THE TICKET STAND</h1>
 
             <form onSubmit={handleSubmit} className="auth-form">
-
-                {/* USERNAME INPUT */}
                 <input
                     type="text"
                     placeholder="Username"
@@ -73,7 +78,6 @@ const SignUp = () => {
                     required
                 />
 
-                {/* ERROR MESSAGE */}
                 {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
                 <button type="submit" className="submit-btn">
