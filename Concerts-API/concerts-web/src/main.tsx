@@ -7,6 +7,7 @@ import SignUp from "./SignUp.tsx";
 import EditUser from "./EditUser.tsx";
 import App from './App.tsx';
 import Concert from './Concert.tsx';
+import AdminTickets from './Components/AdminTickets';
 
 function AppRoute() {
     return (
@@ -20,6 +21,7 @@ function AppRoute() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/edituser" element={<EditUser />} />
                 <Route path="/concert/:id" element={<Concert />} />
+                <Route path="/admin/tickets" element={<AdminTickets />} />
             </Routes>
         </BrowserRouter>
     );

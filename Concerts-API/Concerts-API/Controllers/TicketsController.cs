@@ -127,26 +127,45 @@ namespace Concerts_API.Controllers
         }
 
         // POST create new ticket (original purchase endpoint)
-        [HttpPost("purchase")]
-        public async Task<ActionResult<Ticket>> CreateTicket([FromBody] Ticket ticket)
+        [HttpPost("purchase/{concertId}")]
+        public async Task<IActionResult> BuyTicket(int concertId, [FromQuery] string type = "Standard")
         {
-            try
-            {
-                var concertExists = await _context.Concerts.AnyAsync(c => c.Id == ticket.ConcertId);
-                if (!concertExists)
-                {
-                    return BadRequest("The selected concert does not exist.");
-                }
+            // A) Zjistíme uživatele
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("id")?.Value;
+            if (!int.TryParse(userIdString, out int userId)) return Unauthorized();
 
-                _context.Tickets.Add(ticket);
-                await _context.SaveChangesAsync();
+            // B) Najdeme koncert (kvůli základní ceně)
+            var concert = await _context.Concerts.FindAsync(concertId);
+            if (concert == null) return NotFound("Concert not found.");
 
-                return Ok(new { message = "Ticket purchased successfully!", ticketId = ticket.Id });
-            }
-            catch (Exception ex)
+            // C) Určíme cenu podle typu (Jednoduchá logika)
+            // Pokud je koncert string, musíme ho převést na číslo (decimal)
+            if (!decimal.TryParse(concert.Price, out decimal basePrice))
             {
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                basePrice = 0; // Fallback kdyby byla cena v DB špatně
             }
+
+            decimal finalPrice = basePrice;
+
+            // Pokud chce VIP, zdražíme to o 50% (například)
+            if (type == "VIP")
+            {
+                finalPrice = basePrice * 1.5m;
+            }
+
+            // D) Vytvoříme NOVÝ lístek s tímto typem
+            var ticket = new Ticket
+            {
+                ConcertId = concertId,
+                UserId = userId,
+                Price = finalPrice,  // Uložíme vypočítanou cenu
+                Type = type          // Uložíme typ (Standard/VIP...)
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"Zakoupen lístek typu {type}!", ticketId = ticket.Id, price = finalPrice });
         }
 
         // DELETE ticket
@@ -163,6 +182,64 @@ namespace Concerts_API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Ticket was cancelled." });
+        }
+
+        // 4. ADMIN: UPRAVIT LÍSTEK + STAV KONCERTU
+        [HttpPut("admin/{ticketId}")]
+        public async Task<IActionResult> UpdateTicketAdmin(int ticketId, [FromBody] AdminUpdateTicketRequest request)
+        {
+            // A) Kontrola role Admin
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (role != "Admin") return Unauthorized("Přístup pouze pro administrátory.");
+
+            // B) Najdeme lístek A PŘIPOJÍME KONCERT (abychom mohli měnit Sold_out)
+            var ticket = await _context.Tickets
+                .Include(t => t.Concert) // <--- Důležité! Musíme načíst i koncert.
+                .FirstOrDefaultAsync(t => t.Id == ticketId);
+
+            if (ticket == null) return NotFound("Ticket not found.");
+
+            // C) LOGIKA ÚPRAV
+
+            // 1. Změna ceny lístku (pokud admin poslal novou cenu)
+            if (request.Price.HasValue)
+            {
+                ticket.Price = request.Price.Value;
+            }
+
+            // 2. Změna typu lístku (pokud admin poslal nový typ)
+            if (!string.IsNullOrEmpty(request.Type))
+            {
+                ticket.Type = request.Type;
+            }
+
+            // 3. Změna stavu koncertu (Vyprodáno)
+            // Pokud admin poslal true/false, změníme to v tabulce Concerts
+            if (request.SoldOut.HasValue)
+            {
+                if (ticket.Concert != null)
+                {
+                    ticket.Concert.Sold_out = request.SoldOut.Value;
+                }
+            }
+
+            // D) Uložení změn (uloží se změny v Tickets i v Concerts)
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Lístek (a stav koncertu) byl upraven.",
+                ticketPrice = ticket.Price,
+                ticketType = ticket.Type,
+                concertSoldOut = ticket.Concert?.Sold_out
+            });
+        }
+
+        public class AdminUpdateTicketRequest
+        {
+            public decimal? Price { get; set; } // Změna ceny lístku
+            public string? Type { get; set; }   // Změna typu (VIP/Standard)
+            public bool? SoldOut { get; set; }  // Změna stavu koncertu (Vyprodáno: Ano/Ne)
         }
     }
 }
