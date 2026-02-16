@@ -80,6 +80,12 @@
         color: #333;
     }
 
+    .tickets-section h3 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+        color: #555;
+    }
+
 .success-message {
     background-color: #4caf50;
     color: white;
@@ -116,62 +122,92 @@
     font-size: 1.2em;
 }
 
-.ticket-types {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+.tickets-list {
+    overflow-x: auto;
 }
 
-.ticket-type-card {
+.tickets-table {
+    width: 100%;
+    border-collapse: collapse;
     background-color: white;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    padding: 25px;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-    .ticket-type-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    .tickets-table thead {
+        background-color: #f5f5f5;
     }
 
-    .ticket-type-card h3 {
-        margin-top: 0;
-        color: #333;
-        font-size: 1.5em;
+    .tickets-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
+        border-bottom: 2px solid #ddd;
     }
 
-.ticket-count {
-    color: #666;
-    margin: 10px 0;
+    .tickets-table td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tickets-table tbody tr:hover {
+        background-color: #f9f9f9;
+    }
+
+.sold-ticket-row {
+    opacity: 0.6;
 }
 
-.ticket-price {
-    font-size: 2em;
+.ticket-type-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 12px;
     font-weight: bold;
-    color: #0066cc;
-    margin: 15px 0;
+    text-transform: uppercase;
 }
 
-.buy-ticket-btn {
+    .ticket-type-badge.standard {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .ticket-type-badge.premium {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .ticket-type-badge.vip {
+        background-color: #fff3e0;
+        color: #f57c00;
+    }
+
+.sold-badge {
+    background-color: #d32f2f;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.buy-ticket-btn-small {
     background-color: #0066cc;
     color: white;
     border: none;
-    padding: 12px 30px;
+    padding: 8px 20px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
-    width: 100%;
     transition: background-color 0.2s;
 }
 
-    .buy-ticket-btn:hover:not(:disabled) {
+    .buy-ticket-btn-small:hover:not(:disabled) {
         background-color: #0052a3;
     }
 
-    .buy-ticket-btn:disabled {
+    .buy-ticket-btn-small:disabled {
         background-color: #ccc;
         cursor: not-allowed;
     }

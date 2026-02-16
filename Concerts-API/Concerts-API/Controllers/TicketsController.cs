@@ -1,5 +1,6 @@
 ﻿using Concerts_API.Data;
 using Concerts_API.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -7,7 +8,7 @@ using System.Security.Claims;
 namespace Concerts_API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/tickets")]
     public class TicketsController : ControllerBase
     {
         private readonly WebDbContext _context;
@@ -17,33 +18,48 @@ namespace Concerts_API.Controllers
             _context = context;
         }
 
-        [HttpGet("mine")]
-        public async Task<ActionResult<IEnumerable<object>>> GetUserTickets(int userId)
+        // GET all tickets
+        [HttpGet]
+        public async Task<IActionResult> GetAllTickets()
         {
-            // --- DEBUG VÝPIS DO KONZOLE SERVERU ---
+            var tickets = await _context.Tickets.ToListAsync();
+            return Ok(tickets);
+        }
+
+        // GET tickets by concert ID
+        [HttpGet("concert/{concertId}")]
+        public async Task<IActionResult> GetTicketsByConcert(int concertId)
+        {
+            var tickets = await _context.Tickets
+                .Where(t => t.ConcertId == concertId)
+                .ToListAsync();
+            return Ok(tickets);
+        }
+
+        // GET tickets for current user
+        [Authorize]
+        [HttpGet("mine")]
+        public async Task<ActionResult<IEnumerable<object>>> GetUserTickets()
+        {
             var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                        ?? User.FindFirst("sub")?.Value
                        ?? User.FindFirst("id")?.Value;
 
             Console.WriteLine($"--------------------------------------------------");
-            Console.WriteLine($"[DEBUG] Kdo volá API? ID string z tokenu je: '{userIdString}'");
+            Console.WriteLine($"[DEBUG] Kdo vola API? ID string z tokenu je: '{userIdString}'");
 
-            // Přejmenovali jsme proměnnou na 'parsedUserId', aby se nehádala s jinými
             if (!int.TryParse(userIdString, out int parsedUserId))
             {
-                Console.WriteLine($"[DEBUG] CHYBA: Nedokázal jsem převést '{userIdString}' na číslo (int)!");
-                return Unauthorized("Token neobsahuje platné ID uživatele.");
+                Console.WriteLine($"[DEBUG] CHYBA: Nedokazal jsem prevest '{userIdString}' na cislo (int)!");
+                return Unauthorized("Token neobsahuje platne ID uzivatele.");
             }
 
-            // Teď už víme, že ID je číslo, podíváme se do DB
             var ticketCount = await _context.Tickets.CountAsync(t => t.UserId == parsedUserId);
-            Console.WriteLine($"[DEBUG] ID je {parsedUserId}. Počet lístků v DB pro toto ID: {ticketCount}");
+            Console.WriteLine($"[DEBUG] ID je {parsedUserId}. Pocet listku v DB pro toto ID: {ticketCount}");
 
-            // Pro jistotu vypíšeme, komu lístky patří
             var existingIds = await _context.Tickets.Select(t => t.UserId).Distinct().ToListAsync();
-            Console.WriteLine($"[DEBUG] V DB existují lístky jen pro tato UserId: {string.Join(", ", existingIds)}");
+            Console.WriteLine($"[DEBUG] V DB existuji listky jen pro tato UserId: {string.Join(", ", existingIds)}");
             Console.WriteLine($"--------------------------------------------------");
-            // ---------------------------------------
 
             var rawTickets = await _context.Tickets
                     .Include(t => t.Concert)
@@ -52,11 +68,9 @@ namespace Concerts_API.Controllers
 
             if (rawTickets == null || !rawTickets.Any())
             {
-                // Vrátíme 200 OK, ale prázdný seznam (žádné lístky)
                 return Ok(new List<object>());
             }
 
-            // 3. Formátování (stejné jako předtím)
             var formattedTickets = rawTickets.Select(t =>
             {
                 var c = t.Concert;
@@ -73,10 +87,11 @@ namespace Concerts_API.Controllers
                 {
                     TicketId = t.Id,
                     UserId = t.UserId,
-                    ConcertId = c.Id,
+                    ConcertId = t.ConcertId,
                     Venue = c.Venue,
                     Date = c.Date,
-                    Price = c.Price,
+                    Price = t.Price,
+                    Type = t.Type,
                     Description = c.Description,
                     SoldOut = c.Sold_out,
                     Headliner = dynamicHeadliner,
@@ -89,13 +104,34 @@ namespace Concerts_API.Controllers
             return Ok(formattedTickets);
         }
 
+        // POST purchase ticket
+        [Authorize]
+        [HttpPost("{ticketId}/purchase")]
+        public async Task<IActionResult> PurchaseTicket(int ticketId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("id");
+            if (userIdClaim == null) return Unauthorized();
 
+            int userId = int.Parse(userIdClaim.Value);
+
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null) return NotFound(new { error = "Ticket not found" });
+
+            if (ticket.UserId != null && ticket.UserId != 0)
+                return BadRequest(new { error = "Ticket already sold" });
+
+            ticket.UserId = userId;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Ticket purchased successfully" });
+        }
+
+        // POST create new ticket (original purchase endpoint)
         [HttpPost("purchase")]
-        public async Task<ActionResult<Ticket>> PurchaseTicket([FromBody] Ticket ticket)
+        public async Task<ActionResult<Ticket>> CreateTicket([FromBody] Ticket ticket)
         {
             try
             {
-                // Kontrola existence koncertu
                 var concertExists = await _context.Concerts.AnyAsync(c => c.Id == ticket.ConcertId);
                 if (!concertExists)
                 {
@@ -113,7 +149,7 @@ namespace Concerts_API.Controllers
             }
         }
 
-        // DELETE: Storno lístku
+        // DELETE ticket
         [HttpDelete("{ticketId}")]
         public async Task<IActionResult> DeleteTicket(int ticketId)
         {

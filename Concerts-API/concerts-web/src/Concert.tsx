@@ -28,7 +28,7 @@ const Concert = () => {
     const navigate = useNavigate();
 
     const [concert, setConcert] = useState<Concert | null>(null);
-    const [availableTickets, setAvailableTickets] = useState<Ticket[]>([]);
+    const [allTickets, setAllTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
@@ -60,7 +60,7 @@ const Concert = () => {
                 console.log("Concert data:", concertData);
                 setConcert(concertData);
 
-                // Fetch available tickets for this concert
+                // Fetch all tickets for this concert
                 const ticketsUrl = `${API_BASE}/api/tickets/concert/${id}`;
                 console.log("Fetching tickets from:", ticketsUrl);
 
@@ -69,12 +69,8 @@ const Concert = () => {
 
                 if (ticketsRes.ok) {
                     const ticketsData = await ticketsRes.json();
-                    console.log("Tickets data:", ticketsData);
-
-                    // Filter only tickets without user_id (not sold yet)
-                    const available = ticketsData.filter((ticket: Ticket) => !ticket.user_id || ticket.user_id === 0);
-                    console.log("Available tickets:", available);
-                    setAvailableTickets(available);
+                    console.log("All tickets data:", ticketsData);
+                    setAllTickets(ticketsData);
                 } else {
                     console.log("Tickets fetch failed, but continuing...");
                 }
@@ -120,12 +116,11 @@ const Concert = () => {
 
             setPurchaseSuccess(`Successfully purchased ${ticketType} ticket for $${price}!`);
 
-            // Refresh available tickets
+            // Refresh tickets
             const ticketsRes = await fetch(`${API_BASE}/api/tickets/concert/${id}`);
             if (ticketsRes.ok) {
                 const ticketsData = await ticketsRes.json();
-                const available = ticketsData.filter((ticket: Ticket) => !ticket.user_id || ticket.user_id === 0);
-                setAvailableTickets(available);
+                setAllTickets(ticketsData);
             }
 
         } catch (err) {
@@ -167,14 +162,9 @@ const Concert = () => {
         );
     }
 
-    // Group tickets by type
-    const ticketsByType = availableTickets.reduce((acc, ticket) => {
-        if (!acc[ticket.type]) {
-            acc[ticket.type] = [];
-        }
-        acc[ticket.type].push(ticket);
-        return acc;
-    }, {} as Record<string, Ticket[]>);
+    // Separate available and sold tickets
+    const availableTickets = allTickets.filter(ticket => !ticket.user_id || ticket.user_id === 0);
+    const soldTickets = allTickets.filter(ticket => ticket.user_id && ticket.user_id !== 0);
 
     return (
         <div className="concert-container">
@@ -221,7 +211,12 @@ const Concert = () => {
             </div>
 
             <div className="tickets-section">
-                <h2>Available Tickets</h2>
+                <h2>Tickets Overview</h2>
+                <p style={{ color: '#666', marginBottom: '20px' }}>
+                    Total: {allTickets.length} tickets |
+                    Available: {availableTickets.length} |
+                    Sold: {soldTickets.length}
+                </p>
 
                 {purchaseSuccess && (
                     <div className="success-message">{purchaseSuccess}</div>
@@ -239,25 +234,72 @@ const Concert = () => {
 
                 {concert.sold_out === 1 ? (
                     <p className="no-tickets">This concert is sold out!</p>
-                ) : availableTickets.length === 0 ? (
-                    <p className="no-tickets">No tickets available at the moment</p>
                 ) : (
-                    <div className="ticket-types">
-                        {Object.entries(ticketsByType).map(([type, tickets]) => (
-                            <div key={type} className="ticket-type-card">
-                                <h3>{type}</h3>
-                                <p className="ticket-count">{tickets.length} available</p>
-                                <p className="ticket-price">${tickets[0].price}</p>
-                                <button
-                                    onClick={() => handleBuyTicket(tickets[0].id, type, tickets[0].price)}
-                                    disabled={!isLoggedIn}
-                                    className="buy-ticket-btn"
-                                >
-                                    {isLoggedIn ? 'Buy Ticket' : 'Sign in to buy'}
-                                </button>
+                    <>
+                        <h3>Available Tickets ({availableTickets.length})</h3>
+                        {availableTickets.length === 0 ? (
+                            <p className="no-tickets">No tickets available at the moment</p>
+                        ) : (
+                            <div className="tickets-list">
+                                <table className="tickets-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ticket ID</th>
+                                            <th>Type</th>
+                                            <th>Price</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {availableTickets.map((ticket) => (
+                                            <tr key={ticket.id}>
+                                                <td>#{ticket.id}</td>
+                                                <td><span className={`ticket-type-badge ${ticket.type.toLowerCase()}`}>{ticket.type}</span></td>
+                                                <td>${ticket.price}</td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => handleBuyTicket(ticket.id, ticket.type, ticket.price)}
+                                                        disabled={!isLoggedIn}
+                                                        className="buy-ticket-btn-small"
+                                                    >
+                                                        {isLoggedIn ? 'Buy' : 'Sign in'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        ))}
-                    </div>
+                        )}
+
+                        {soldTickets.length > 0 && (
+                            <>
+                                <h3 style={{ marginTop: '40px' }}>Sold Tickets ({soldTickets.length})</h3>
+                                <div className="tickets-list">
+                                    <table className="tickets-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Ticket ID</th>
+                                                <th>Type</th>
+                                                <th>Price</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {soldTickets.map((ticket) => (
+                                                <tr key={ticket.id} className="sold-ticket-row">
+                                                    <td>#{ticket.id}</td>
+                                                    <td><span className={`ticket-type-badge ${ticket.type.toLowerCase()}`}>{ticket.type}</span></td>
+                                                    <td>${ticket.price}</td>
+                                                    <td><span className="sold-badge">SOLD</span></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </>
                 )}
             </div>
         </div>
