@@ -9,6 +9,7 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="src\Components\Concert.css" />
     <None Remove="src\Components\ReactComponent.tsx" />
     <None Remove="src\Components\SignIn.tsx" />
     <None Remove="src\Components\SignUp.tsx" />

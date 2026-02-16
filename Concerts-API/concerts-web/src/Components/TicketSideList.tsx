@@ -24,7 +24,7 @@ const SideTicketList = () => {
 
         setIsLoggedIn(true);
 
-        fetch('https://localhost:7231/api/tickets/mine', {
+        fetch('http://localhost:7231/api/tickets/mine', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

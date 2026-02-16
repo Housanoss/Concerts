@@ -30,6 +30,10 @@ function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
             <small style={{ color: '#555' }}>Date: {new Date(concert.date).toLocaleDateString()}</small>
             <p style={{ color: '#555' }}>Venue: {concert.venue}</p>
             <p style={{ color: '#555' }}>Price range: {concert.price}</p>
+
+            <Link to="/concert">
+            <button>Take me there!</button>
+            </Link>
         </div>
     );
 }
