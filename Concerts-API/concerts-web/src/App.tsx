@@ -31,7 +31,7 @@ function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
             <p style={{ color: '#555' }}>Venue: {concert.venue}</p>
             <p style={{ color: '#555' }}>Price range: {concert.price}</p>
 
-            <Link to="/concert">
+            <Link to={`/concert/${concert.id}`}>
             <button>Take me there!</button>
             </Link>
         </div>

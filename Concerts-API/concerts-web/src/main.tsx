@@ -7,8 +7,6 @@ import SignUp from "./SignUp.tsx";
 import EditUser from "./EditUser.tsx";
 import App from './App.tsx';
 import Concert from './Concert.tsx';
-//import RequireAuth from "./Components/RequireAuth.tsx";
-
 
 function AppRoute() {
     return (
@@ -16,16 +14,12 @@ function AppRoute() {
             <Routes>
                 <Route
                     path="/"
-                    element={
-                        //<RequireAuth>
-                            <App />
-                        //</RequireAuth>
-                    }
+                    element={<App />}
                 />
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
-                <Route path="/edituser" element={<EditUser/>} />
-                <Route path="/concert" element={<Concert/>}/>
+                <Route path="/edituser" element={<EditUser />} />
+                <Route path="/concert/:id" element={<Concert />} />
             </Routes>
         </BrowserRouter>
     );
@@ -34,7 +28,7 @@ function AppRoute() {
 export default AppRoute;
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AppRoute />
-  </StrictMode>,
+    <StrictMode>
+        <AppRoute />
+    </StrictMode>,
 )

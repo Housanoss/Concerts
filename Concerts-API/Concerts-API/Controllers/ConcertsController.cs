@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Concerts_API.Data;
+﻿using Concerts_API.Data;
 using Concerts_API.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Concerts_API.Controllers
 {
@@ -16,68 +16,26 @@ namespace Concerts_API.Controllers
             _context = context;
         }
 
-        // GET: api/concerts
+        // GET all concerts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> GetConcert(string? name)
+        public async Task<IActionResult> GetAllConcerts()
         {
-            try
-            {
-
-                var query = _context.Concerts.AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    query = query.Where(c => c.Bands.Contains(name));
-                }
-
-                var rawConcerts = await query.ToListAsync();
-
-               
-                var formattedList = rawConcerts.Select(c =>
-                {
-                    // Split 
-                    var splitBands = c.Bands != null
-                        ? c.Bands.Split(',').Select(b => b.Trim()).ToList()
-                        : new List<string>();
-
-                    // Logic: First band is Headliner, the rest are Openers
-                    var dynamicHeadliner = splitBands.FirstOrDefault() ?? "TBA";
-                    var dynamicOpeners = string.Join(", ", splitBands.Skip(1));
-
-                    
-                    return new
-                    {
-                        c.Id,
-                        c.Venue,
-                        c.Date,
-                        c.Price,
-                        c.Genres,
-                        c.Description,
-                        c.Sold_out,
-                        Bands = c.Bands,
-                        Headliner = dynamicHeadliner,
-                        Openers = dynamicOpeners
-                    };
-                });
-
-                return Ok(formattedList);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Database Error: {ex.Message}");
-            }
+            var concerts = await _context.Concerts.ToListAsync();
+            return Ok(concerts);
         }
-        //Loads tickets to buy for one chosen concert
-        [HttpGet("available/{concertId}")]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetAvailableTickets(int concertId)
-        {
-            
-            var ticketsToBuy = await _context.Tickets
-                .Where(t => t.ConcertId == concertId && t.UserId == 1)
-                .ToListAsync();
 
-            
-            return Ok(ticketsToBuy);
+        // GET single concert by ID
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetConcert(int id)
+        {
+            var concert = await _context.Concerts.FindAsync(id);
+
+            if (concert == null)
+            {
+                return NotFound(new { error = "Concert not found" });
+            }
+
+            return Ok(concert);
         }
     }
 }
