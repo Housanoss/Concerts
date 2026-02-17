@@ -22,7 +22,8 @@ public sealed class LoginUser
     public sealed record Request(string Email, string Password);
 
     // Výstupní data - vrátíme token + info o uživateli
-    public sealed record Response(string Token, string Username, string Email, int UserId);
+    // Přidejte ", string Role" nakonec seznamu
+    public record Response(string Token, string Username, string Email, int UserId, string Role);
 
     public async Task<Response> Handle(Request request)
     {
@@ -56,7 +57,8 @@ public sealed class LoginUser
             Token: token,
             Username: user.Username,  // nebo user.Name, podle toho co máte v User entity
             Email: user.Email,
-            UserId: user.Id
+            UserId: user.Id,
+            Role: user.Role
         );
     }
 }

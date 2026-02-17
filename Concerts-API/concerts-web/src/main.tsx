@@ -8,6 +8,7 @@ import EditUser from "./EditUser.tsx";
 import App from './App.tsx';
 import Concert from './Concert.tsx';
 import AdminTickets from './Components/AdminTickets';
+import ConcertEditor from './Components/ConcertEditor';
 
 function AppRoute() {
     return (
@@ -22,6 +23,10 @@ function AppRoute() {
                 <Route path="/edituser" element={<EditUser />} />
                 <Route path="/concert/:id" element={<Concert />} />
                 <Route path="/admin/tickets" element={<AdminTickets />} />
+                {/* Admin Routes */}
+                <Route path="/admin/tickets" element={<AdminTickets />} />
+                <Route path="/admin/concert/new" element={<ConcertEditor />} />
+                <Route path="/admin/concert/:id" element={<ConcertEditor />} />
             </Routes>
         </BrowserRouter>
     );

@@ -16,125 +16,75 @@ const SignIn = () => {
         e.preventDefault();
         setError(null);
 
-        //  Frontend validace před voláním backendu
-        if (!email.trim()) {
-            setError("Email is required");
-            return;
-        }
-
-        if (!password.trim()) {
-            setError("Password is required");
+        // Validace
+        if (!email.trim() || !password.trim()) {
+            setError("Email and Password are required");
             return;
         }
 
         setLoading(true);
         const targetUrl = `${API_BASE}/api/users/login`;
 
-        console.log("API_BASE:", API_BASE);
-        console.log("Target URL:", targetUrl);
-
         try {
             const response = await fetch(targetUrl, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    password
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
             });
 
-            const raw = await response.text();
-
-            interface LoginResponse {
-                // Základní věci
-                token?: string;
-                error?: string;
-                Error?: string;
-                message?: string;
-
-                // Token varianty
-                Token?: string;
-                accessToken?: string;
-                jwt?: string;
-
-                // Username a email
-                username?: string;
-                email?: string;
-
-                // Objekt user, který má v sobě username nebo name
-                user?: {
-                    username?: string;
-                    name?: string;
-                    email?: string;
-                };
-            }
-            let data: LoginResponse | null = null;
-
+            // Bezpečné parsování odpovědi (pro případ, že backend vrátí chybu v textu)
+            const rawText = await response.text();
+            let data: any = {};
             try {
-                data = raw ? JSON.parse(raw) : null;
+                data = JSON.parse(rawText);
             } catch {
-                data = null;
+                data = { message: rawText }; // Fallback pro ne-JSON odpovědi
             }
-
-            console.log("LOGIN status:", response.status);
-            console.log("LOGIN raw body:", raw);
 
             if (!response.ok) {
-                const msg =
-                    data?.Error ||
-                    data?.error ||
-                    data?.message ||
-                    `Login failed (${response.status})`;
-
-                setError(msg);
+                // Zobrazíme chybu z backendu nebo obecnou
+                setError(data.error || data.message || `Login failed (${response.status})`);
+                setLoading(false);
                 return;
             }
 
-            //  token mapování — backend může vracet různě
-            const token =
-                data?.Token ||
-                data?.token ||
-                data?.accessToken ||
-                data?.jwt;
+            // --- ÚSPĚŠNÉ PŘIHLÁŠENÍ ---
 
+            // 1. Token (backend ho může poslat jako 'token' nebo 'Token')
+            const token = data.token || data.Token;
             if (!token) {
-                setError("Login OK but token missing in response.");
-                console.log("Parsed data:", data);
+                setError("Login successful but no token received.");
+                setLoading(false);
                 return;
             }
-
-            //  uložení tokenu pro autorizaci dalších requestů
             localStorage.setItem("token", token);
 
-            //  uložení username (skutečné jméno uživatele)
-            const username =
-                data?.username ??
-                data?.user?.username ??
-                data?.user?.name ??
-                "User"; // fallback pokud backend nepošle username
-
+            // 2. Username
+            const username = data.username || data.Username || "User";
             localStorage.setItem("username", username);
 
-            //  uložení emailu zvlášť
-            const userEmail =
-                data?.email ??
-                data?.user?.email ??
-                email;
-
+            // 3. Email
+            const userEmail = data.email || data.Email || email;
             localStorage.setItem("email", userEmail);
 
-            console.log("Stored username:", username);
-            console.log("Stored email:", userEmail);
+            // 👇 4. ROLE (KLÍČOVÁ ČÁST PRO ADMINA) 👇
+            // Backend posílá 'role' nebo 'Role'. Uložíme to.
+            // Pokud role nepřijde, uložíme "User".
+            const role = data.role || data.Role || "User";
+            localStorage.setItem("role", role);
 
-            //  přesměrování po loginu
+            console.log("✅ Login Success!");
+            console.log("👤 User:", username);
+            console.log("🔑 Role:", role);
+
+            // 5. Přesměrování a Refresh
+            // Refresh je nutný, aby si App.tsx znovu načetla localStorage a ukázala tlačítka
             navigate("/");
+            window.location.reload();
 
         } catch (err) {
-            console.error("LOGIN error:", err);
-            setError("Network / CORS error — check backend & URL.");
-        } finally {
+            console.error("Login Error:", err);
+            setError("Failed to connect to the server.");
             setLoading(false);
         }
     };
@@ -144,7 +94,6 @@ const SignIn = () => {
             <h1 className="title">THE TICKET STAND</h1>
 
             <form onSubmit={handleSubmit} className="auth-form">
-
                 <input
                     type="email"
                     placeholder="E-mail"
@@ -161,7 +110,7 @@ const SignIn = () => {
                     required
                 />
 
-                {error && <p className="error">{error}</p>}
+                {error && <p className="error" style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
 
                 <button
                     type="submit"

@@ -65,7 +65,8 @@ namespace Concerts_API.Controllers
                     token = response.Token,
                     username = response.Username,
                     email = response.Email,
-                    userId = response.UserId
+                    userId = response.UserId,
+                    role = response.Role,
                 });
             }
             catch (Exception ex)
@@ -241,6 +242,7 @@ namespace Concerts_API.Controllers
     {
         public string Email { get; set; }
         public string Password { get; set; }
+
     }
 
     public class UpdateCurrentUserRequest
