@@ -8,18 +8,18 @@ interface Concert {
     id: number;
     date: string;
     venue: string;
-    bands: string; // V DB asi "artist" nebo "headliner"? Upravte dle entity
-    price: string; // Základní cena jako string
+    bands: string;
+    price: string;
     description: string;
     genres: string;
     sold_out: number;
 }
 
-// Typy lístků pro výběr
+// Definice typů lístků a jejich cenových násobků
 const TICKET_TYPES = [
-    { label: "Standard", multiplier: 1 },
-    { label: "VIP", multiplier: 1.5 },
-    { label: "Golden Circle", multiplier: 1.2 }
+    { id: 'standard', label: "Standard", multiplier: 1 },
+    { id: 'vip', label: "VIP", multiplier: 1.5 },
+    { id: 'gold', label: "Golden Circle", multiplier: 1.2 }
 ];
 
 const Concert = () => {
@@ -31,9 +31,12 @@ const Concert = () => {
     const [error, setError] = useState<string | null>(null);
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
 
-    // Nové stavy pro výběr typu
-    const [selectedType, setSelectedType] = useState<string>("Standard");
-    const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
+    // Stav pro počty lístků
+    const [quantities, setQuantities] = useState<{ [key: string]: number }>({
+        standard: 0,
+        vip: 0,
+        gold: 0
+    });
 
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
@@ -42,233 +45,178 @@ const Concert = () => {
     useEffect(() => {
         const fetchConcertData = async () => {
             setLoading(true);
-            setError(null);
-
             try {
-                const concertUrl = `${API_BASE}/api/concerts/${id}`;
-                const concertRes = await fetch(concertUrl);
-
-                if (!concertRes.ok) {
-                    throw new Error(`Concert not found (${concertRes.status})`);
-                }
-
-                const concertData = await concertRes.json();
-                setConcert(concertData);
-
-                // Nastavíme výchozí cenu podle základní ceny koncertu
-                if (concertData.price) {
-                    setCalculatedPrice(parseFloat(concertData.price));
-                }
-
+                const res = await fetch(`${API_BASE}/api/concerts/${id}`);
+                if (!res.ok) throw new Error("Concert not found");
+                const data = await res.json();
+                setConcert(data);
             } catch (err) {
-                console.error("Error fetching concert:", err);
                 setError(err instanceof Error ? err.message : "Failed to load concert");
             } finally {
                 setLoading(false);
             }
         };
 
-        if (id) {
-            fetchConcertData();
-        } else {
-            setError("No concert ID provided");
-            setLoading(false);
-        }
+        if (id) fetchConcertData();
     }, [id]);
 
-    // Přepočet ceny při změně typu
-    useEffect(() => {
-        if (concert && concert.price) {
-            const basePrice = parseFloat(concert.price);
-            const typeInfo = TICKET_TYPES.find(t => t.label === selectedType);
-            if (typeInfo) {
-                setCalculatedPrice(basePrice * typeInfo.multiplier);
-            }
-        }
-    }, [selectedType, concert]);
+    const updateQuantity = (typeId: string, delta: number) => {
+        setQuantities(prev => ({
+            ...prev,
+            [typeId]: Math.max(0, prev[typeId] + delta)
+        }));
+    };
 
-    const handleBuyTicket = async () => {
+    const handleBuyType = async (typeId: string, label: string, multiplier: number) => {
         if (!isLoggedIn) {
             navigate('/signin');
             return;
         }
 
+        const quantity = quantities[typeId];
+        if (quantity === 0) return;
+
         setPurchaseSuccess(null);
-        setError(null);
 
         try {
-            // Voláme endpoint pro nákup s parametrem typu
-            const res = await fetch(`${API_BASE}/api/tickets/purchase/${id}?type=${selectedType}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || data.error || "Purchase failed");
+            const promises = [];
+            for (let i = 0; i < quantity; i++) {
+                promises.push(
+                    fetch(`${API_BASE}/api/tickets/purchase/${id}?type=${label}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                    })
+                );
             }
 
-            const data = await res.json();
-            setPurchaseSuccess(`Successfully purchased ${selectedType} ticket for $${data.price || calculatedPrice}!`);
+            await Promise.all(promises);
+            setPurchaseSuccess(`Successfully purchased ${quantity}x ${label} tickets! 🎉`);
+            setQuantities(prev => ({ ...prev, [typeId]: 0 }));
 
         } catch (err) {
-            console.error("Purchase error:", err);
-            setError(err instanceof Error ? err.message : "Failed to purchase ticket");
+            console.error(err);
+            setError("Purchase failed.");
         }
     };
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
-        localStorage.removeItem("email");
         window.location.reload();
     };
 
-    if (loading) {
-        return (
-            <div className="concert-container">
-                <p>Loading concert details...</p>
-            </div>
-        );
-    }
+    if (loading) return <div className="loading-screen">Loading concert details...</div>;
+    if (!concert) return <div className="error-screen">Concert not found</div>;
 
-    if (error && !concert) {
-        return (
-            <div className="concert-container">
-                <p className="error">Error: {error}</p>
-                <button onClick={() => navigate('/')} className="back-button">
-                    Back to Concerts
-                </button>
-            </div>
-        );
-    }
-
-    if (!concert) {
-        return (
-            <div className="concert-container">
-                <p>Concert not found</p>
-                <button onClick={() => navigate('/')} className="back-button">
-                    Back to Concerts
-                </button>
-            </div>
-        );
-    }
+    const basePrice = parseFloat(concert.price);
+    const dateObj = new Date(concert.date);
 
     return (
-        <div className="concert-container">
-            <div className="concert-top-bar">
-                <button onClick={() => navigate('/')} className="back-button">
-                    Back to Concerts
+        <div className="concert-page">
+            {/* --- Horní navigace --- */}
+            <nav className="top-nav">
+                <button onClick={() => navigate('/')} className="nav-back-btn">
+                    ← Back to List
                 </button>
 
-                <div className="user-controls">
+                <div className="nav-user">
                     {!isLoggedIn ? (
-                        <>
-                            <Link to="/signin">
-                                <button className="signInBtn">Sign In</button>
-                            </Link>
-                            <Link to="/signup">
-                                <button className="signUpBtn">Sign Up</button>
-                            </Link>
-                        </>
+                        <Link to="/signin"><button className="btn-signin">Sign In</button></Link>
                     ) : (
                         <>
-                            <Link to="/edituser">
-                                <span className="username-display">{username}</span>
-                            </Link>
-                            <button onClick={handleLogout} className="logoutBtn">
-                                Log Out
-                            </button>
+                            <span className="user-name">{username}</span>
+                            <button onClick={handleLogout} className="btn-logout">Log Out</button>
                         </>
                     )}
                 </div>
-            </div>
+            </nav>
 
-            <div className="concert-header">
-                <h1>{concert.bands}</h1>
-                {concert.sold_out === 1 && (
-                    <span className="sold-out-badge">SOLD OUT</span>
-                )}
-            </div>
-
-            <div className="concert-details">
-                <div className="detail-section">
-                    <h3>Date</h3>
-                    <p>{new Date(concert.date).toLocaleDateString()}</p>
+            {/* --- Hero Sekce (Hlavička) --- */}
+            <header className="hero-section">
+                <div className="hero-content">
+                    <h1 className="band-title">{concert.bands}</h1>
+                    <div className="concert-meta">
+                        <span className="meta-item"> {dateObj.toLocaleDateString()}</span>
+                        <span className="meta-item"> {concert.venue}</span>
+                        <span className="meta-item"> {concert.genres}</span>
+                    </div>
+                    {concert.sold_out === 1 && <div className="badge-soldout">SOLD OUT</div>}
                 </div>
-                <div className="detail-section">
-                    <h3>Venue</h3>
-                    <p>{concert.venue}</p>
-                </div>
-                <div className="detail-section">
-                    <h3>Base Price</h3>
-                    <p>${concert.price}</p>
-                </div>
-                <div className="detail-section description">
-                    <h3>About</h3>
-                    <p>{concert.description}</p>
-                </div>
-            </div>
+            </header>
 
-            <div className="tickets-section">
-                <h2>Buy Tickets</h2>
+            {/* --- Popis --- */}
+            <section className="description-section">
+                <p>{concert.description}</p>
+            </section>
 
-                {purchaseSuccess && (
-                    <div className="success-message">{purchaseSuccess}</div>
-                )}
+            {/* --- Výběr lístků --- */}
+            <main className="tickets-container">
+                <h2 className="section-title">Select Tickets</h2>
 
-                {error && (
-                    <div className="error-message">{error}</div>
-                )}
+                {purchaseSuccess && <div className="alert-success">{purchaseSuccess}</div>}
+                {error && <div className="alert-error">{error}</div>}
 
                 {concert.sold_out === 1 ? (
-                    <p className="no-tickets">This concert is sold out!</p>
+                    <div className="sold-out-message">
+                        This concert is currently sold out.
+                    </div>
                 ) : (
-                    <div className="ticket-purchase-box" style={{ background: '#222', padding: '20px', borderRadius: '10px', maxWidth: '400px', margin: '0 auto' }}>
+                    <div className="ticket-grid">
+                        {TICKET_TYPES.map((type) => {
+                            const price = basePrice * type.multiplier;
+                            const currentQty = quantities[type.id];
+                            const totalPrice = price * currentQty;
+                            const isActive = currentQty > 0;
 
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', marginBottom: '10px', color: '#ccc' }}>Select Ticket Type:</label>
-                            <select
-                                value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value)}
-                                style={{ width: '100%', padding: '10px', borderRadius: '5px' }}
-                            >
-                                {TICKET_TYPES.map(type => (
-                                    <option key={type.label} value={type.label}>
-                                        {type.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                            return (
+                                <div key={type.id} className={`ticket-row ${isActive ? 'active' : ''}`}>
 
-                        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                            <span style={{ fontSize: '1.5rem', color: '#00ff00' }}>
-                                Total Price: ${calculatedPrice.toFixed(2)}
-                            </span>
-                        </div>
+                                    {/* Typ a Cena */}
+                                    <div className="ticket-info">
+                                        <h3>{type.label}</h3>
+                                        <span className="price-tag">${price.toFixed(2)} <small>/ each</small></span>
+                                    </div>
 
-                        <button
-                            onClick={handleBuyTicket}
-                            disabled={!isLoggedIn}
-                            style={{
-                                width: '100%',
-                                padding: '15px',
-                                backgroundColor: isLoggedIn ? '#ffa500' : '#555',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '5px',
-                                fontSize: '1.2rem',
-                                cursor: isLoggedIn ? 'pointer' : 'not-allowed'
-                            }}
-                        >
-                            {isLoggedIn ? `Buy ${selectedType} Ticket` : 'Sign in to Buy'}
-                        </button>
+                                    {/* Počítadlo */}
+                                    <div className="ticket-counter">
+                                        <button
+                                            className="counter-btn"
+                                            onClick={() => updateQuantity(type.id, -1)}
+                                        >−</button>
+
+                                        <span className="counter-value">{currentQty}</span>
+
+                                        <button
+                                            className="counter-btn"
+                                            onClick={() => updateQuantity(type.id, 1)}
+                                        >+</button>
+                                    </div>
+
+                                    {/* Akce */}
+                                    <div className="ticket-action">
+                                        {isActive && (
+                                            <div className="total-price">
+                                                Total: <span>${totalPrice.toFixed(2)}</span>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            className="buy-btn"
+                                            onClick={() => handleBuyType(type.id, type.label, type.multiplier)}
+                                            disabled={!isActive || !isLoggedIn}
+                                        >
+                                            {isLoggedIn ? (isActive ? 'Buy Now' : 'Add') : 'Sign In'}
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
-            </div>
+            </main>
         </div>
     );
 };

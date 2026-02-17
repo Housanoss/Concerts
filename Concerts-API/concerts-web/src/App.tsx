@@ -3,14 +3,14 @@ import "./App.css";
 import { Link } from "react-router-dom";
 import SideTicketList from './Components/TicketSideList.tsx';
 
+// Definice struktury koncertu podle toho, co vrací API
 interface Concert {
     id: number;
-    headliner: string;
-    bands: string;
+    bands: string;       // ZMĚNA: V databázi je to 'bands', ne 'headliner'
     venue: string;
     date: string;
     price: string;
-    openers: string;
+    openers?: string;    // Otazník znamená, že to nemusí být vždy vyplněné
 }
 
 interface ConcertTicketProps {
@@ -21,19 +21,45 @@ interface ConcertTicketProps {
 function ConcertInfo({ concertId, concerts }: ConcertTicketProps) {
     const concert = concerts.find(c => c.id === concertId);
 
-    if (!concert) return <p>Concert with ID {concertId} not found.</p>;
+    if (!concert) return null;
+
+    const dateObj = new Date(concert.date);
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+
+    // --- VÝPOČET ROZMEZÍ CENY ---
+    const basePrice = parseFloat(concert.price);
+    const maxPrice = basePrice * 1.5; // VIP je 1.5 násobek (podle Concert.tsx)
+
+    // Formátování ceny (např. "$50 - $75")
+    const priceRange = `$${basePrice.toFixed(0)} - $${maxPrice.toFixed(0)}`;
 
     return (
-        <div className="concert">
-            <h2 style={{ margin: 0 }}>{concert.headliner}</h2>
-            <p style={{ color: '#555' }}>Openers: {concert.openers}</p>
-            <small style={{ color: '#555' }}>Date: {new Date(concert.date).toLocaleDateString()}</small>
-            <p style={{ color: '#555' }}>Venue: {concert.venue}</p>
-            <p style={{ color: '#555' }}>Price range: {concert.price}</p>
+        <div className="concert-card">
+            <div className="concert-date">
+                <span className="day">{day}</span>
+                <span className="month">{month}</span>
+            </div>
 
-            <Link to={`/concert/${concert.id}`}>
-            <button>Take me there!</button>
-            </Link>
+            <div className="concert-info">
+                {/* ZMĚNA: Používáme concert.bands místo concert.headliner */}
+                <h2 className="headliner">{concert.bands}</h2>
+
+                {/* Pokud nejsou openers, napíšeme "Special Guests" */}
+                <p className="openers">with {concert.openers || "Special Guests"}</p>
+
+                <div className="meta-info">
+                    <span>📍 {concert.venue}</span>
+                    {/* ZMĚNA: Zobrazujeme vypočítaný rozsah */}
+                    <span>💰 {priceRange}</span>
+                </div>
+            </div>
+
+            <div className="concert-action">
+                <Link to={`/concert/${concert.id}`} className="cta-link">
+                    <button className="cta-btn">Get Tickets</button>
+                </Link>
+            </div>
         </div>
     );
 }
@@ -45,7 +71,6 @@ export default function App() {
     const [username, setUsername] = useState<string>("");
 
     useEffect(() => {
-        // Kontrola, zda je uživatel přihlášen
         const token = localStorage.getItem("token");
         const storedUsername = localStorage.getItem("username");
         setIsLoggedIn(!!token);
@@ -59,6 +84,8 @@ export default function App() {
                 return res.json();
             })
             .then((data: Concert[]) => {
+                // Pro jistotu si do konzole vypíšeme, co přišlo, abychom viděli názvy sloupců
+                console.log("Data z API:", data);
                 setConcerts(data);
                 setLoading(false);
             })
@@ -76,60 +103,71 @@ export default function App() {
         window.location.reload();
     };
 
-    if (loading) return <div style={{ padding: '20px' }}>Connecting to API...</div>;
+    if (loading) return <div className="loading-screen">Loading concerts...</div>;
 
     return (
-        <div className='page'>
-            <div style={{ fontFamily: 'Arial, sans-serif', flex: 2, marginRight: '40px' }}>
-                <h1>The Ticket Stand</h1>
-                <hr />
-                <p>Current Shows Available:</p>
-                <button className="filterBtn">Filter</button>
-                <button className="orderbyBtn">Order by</button>
+        <div className='app-container'>
+            {/* Hlavní část - Levá strana */}
+            <div className="main-content">
+                <header className="app-header">
+                    <h1>The Ticket Stand</h1>
+                    <p className="subtitle">Discover & book your next live experience</p>
 
-                {concerts.length === 0 ? (
-                    <p>No concerts found. Check if your MySQL table has data!</p>
-                ) : (
-                    <div style={{ display: 'grid', gap: '20px', marginTop: '20px' }}>
-                        {concerts.map((item) => (
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search by artist, venue or city..."
+                            className="search-input"
+                        />
+                        <span className="search-icon">🔍</span>
+                    </div>
+                </header>
+
+                <div className="concert-list">
+                    {concerts.length === 0 ? (
+                        <div className="empty-state">
+                            No concerts found in the database.
+                        </div>
+                    ) : (
+                        concerts.map((item) => (
                             <ConcertInfo
                                 key={item.id}
                                 concertId={item.id}
                                 concerts={concerts}
                             />
-                        ))}
-                    </div>
-                )}
+                        ))
+                    )}
+                </div>
             </div>
 
-            <div className='rightSpace'>
-                <div className='topBtns'>
-                    {!isLoggedIn && (
-                        <>
+            {/* Postranní panel - Pravá strana */}
+            <div className='sidebar'>
+                <div className='user-panel'>
+                    {!isLoggedIn ? (
+                        <div className="auth-buttons">
                             <Link to="/signin">
-                                <button className="signInBtn">Sign In</button>
+                                <button className="btn-secondary">Sign In</button>
                             </Link>
                             <Link to="/signup">
-                                <button className="signUpBtn">Sign Up</button>
+                                <button className="btn-primary">Sign Up</button>
                             </Link>
-                        </>
-                    )}
-                    {isLoggedIn && (
-                        <>
-                            <Link to="/edituser">
-                                <span>{username}</span>
-                            </Link>
-                            <button
-                                onClick={handleLogout}
-                                className="logoutBtn"
-                            >
+                        </div>
+                    ) : (
+                        <div className="logged-user">
+                            <div className="user-greeting">
+                                <span>Hello,</span>
+                                <Link to="/edituser" className="username-link">{username}</Link>
+                            </div>
+                            <button onClick={handleLogout} className="btn-logout">
                                 Log Out
                             </button>
-                        </>
+                        </div>
                     )}
                 </div>
 
-                <SideTicketList />
+                <div className="sidebar-content">
+                    <SideTicketList />
+                </div>
             </div>
         </div>
     );
