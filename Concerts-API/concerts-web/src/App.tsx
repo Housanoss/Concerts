@@ -165,7 +165,7 @@ export default function App() {
                                 <button style={{
                                     width: '50px',
                                     height: '50px',
-                                    borderRadius: '50%',
+                                    borderRadius: '50px',
                                     background: '#ffa500',
                                     color: 'black',
                                     border: 'none',
@@ -174,9 +174,12 @@ export default function App() {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    fontWeight: 'bold'
+                                    fontWeight: 'bold',
+                                    padding: "15px",
+                                    textAlign: 'center',
+                                    
                                 }}>
-                                    +
+                                    <p style={{ marginBottom: '35px' }}>+</p>
                                 </button>
                             </Link>
                         )}
