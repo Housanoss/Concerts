@@ -1,7 +1,6 @@
 ﻿using Concerts_API.Entities;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace Concerts_API.Data
 {
     public class WebDbContext : DbContext
@@ -11,9 +10,14 @@ namespace Concerts_API.Data
         public DbSet<Band> Bands { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
 
+        public WebDbContext(DbContextOptions<WebDbContext> options) : base(options) { }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseMySQL("server=mysqlstudenti.litv.sssvt.cz;database=4c1_simunekmartin_db2;user=simunekmartin;password=123456");
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseMySQL("server=mysqlstudenti.litv.sssvt.cz;database=4c1_simunekmartin_db2;user=simunekmartin;password=123456");
+            }
         }
     }
 }

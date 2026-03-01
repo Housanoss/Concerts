@@ -15,7 +15,14 @@ interface Concert {
     sold_out: number;
 }
 
-// Definice typů lístků a jejich cenových násobků
+interface Ticket {
+    id: number;
+    concert_id: number;
+    userId: number;
+    price: number;
+    type: string;
+}
+
 const TICKET_TYPES = [
     { id: 'standard', label: "Standard", multiplier: 1 },
     { id: 'vip', label: "VIP", multiplier: 1.5 },
@@ -30,8 +37,8 @@ const Concert = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [purchaseSuccess, setPurchaseSuccess] = useState<string | null>(null);
+    const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
 
-    // Stav pro počty lístků
     const [quantities, setQuantities] = useState<{ [key: string]: number }>({
         standard: 0,
         vip: 0,
@@ -67,38 +74,70 @@ const Concert = () => {
         }));
     };
 
-    const handleBuyType = async (typeId: string, label: string, multiplier: number) => {
+    const cartItems = TICKET_TYPES.filter(t => quantities[t.id] > 0).map(t => ({
+        ...t,
+        quantity: quantities[t.id],
+        price: parseFloat(concert?.price || "0") * t.multiplier,
+    }));
+
+    const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    const handleCheckout = async () => {
         if (!isLoggedIn) {
             navigate('/signin');
             return;
         }
 
-        const quantity = quantities[typeId];
-        if (quantity === 0) return;
-
+        setIsPurchasing(true);
         setPurchaseSuccess(null);
+        setError(null);
 
         try {
-            const promises = [];
-            for (let i = 0; i < quantity; i++) {
-                promises.push(
-                    fetch(`${API_BASE}/api/tickets/purchase/${id}?type=${label}`, {
+            // 1. Načteme všechny lístky pro tento koncert
+            const ticketsRes = await fetch(`${API_BASE}/api/tickets/concert/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const allTickets: Ticket[] = await ticketsRes.json();
+
+            // 2. Pro každý typ v košíku najdeme volné lístky (UserId == 1) a koupíme je
+            for (const item of cartItems) {
+                const freeTickets = allTickets
+                    .filter(t => t.type === item.label && t.userId === 1)
+                    .slice(0, item.quantity);
+
+                if (freeTickets.length < item.quantity) {
+                    setError(`Not enough ${item.label} tickets available.`);
+                    setIsPurchasing(false);
+                    return;
+                }
+
+                // 3. Postupně kupujeme každý volný lístek
+                for (const ticket of freeTickets) {
+                    const res = await fetch(`${API_BASE}/api/tickets/${ticket.id}/purchase`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
                             Authorization: `Bearer ${token}`,
                         },
-                    })
-                );
+                    });
+
+                    if (!res.ok) {
+                        setError("Purchase failed. Please try again.");
+                        setIsPurchasing(false);
+                        return;
+                    }
+                }
             }
 
-            await Promise.all(promises);
-            setPurchaseSuccess(`Successfully purchased ${quantity}x ${label} tickets! 🎉`);
-            setQuantities(prev => ({ ...prev, [typeId]: 0 }));
+            setPurchaseSuccess(`Successfully purchased ${cartCount} ticket(s)! 🎉`);
+            setQuantities({ standard: 0, vip: 0, gold: 0 });
 
         } catch (err) {
             console.error(err);
-            setError("Purchase failed.");
+            setError("Purchase failed. Please try again.");
+        } finally {
+            setIsPurchasing(false);
         }
     };
 
@@ -116,12 +155,10 @@ const Concert = () => {
 
     return (
         <div className="concert-page">
-            {/* --- Horní navigace --- */}
             <nav className="top-nav">
                 <button onClick={() => navigate('/')} className="nav-back-btn">
                     ← Back to List
                 </button>
-
                 <div className="nav-user">
                     {!isLoggedIn ? (
                         <Link to="/signin"><button className="btn-signin">Sign In</button></Link>
@@ -134,25 +171,22 @@ const Concert = () => {
                 </div>
             </nav>
 
-            {/* --- Hero Sekce (Hlavička) --- */}
             <header className="hero-section">
                 <div className="hero-content">
                     <h1 className="band-title">{concert.bands}</h1>
                     <div className="concert-meta">
-                        <span className="meta-item"> {dateObj.toLocaleDateString()}</span>
-                        <span className="meta-item"> {concert.venue}</span>
-                        <span className="meta-item"> {concert.genres}</span>
+                        <span className="meta-item">{dateObj.toLocaleDateString()}</span>
+                        <span className="meta-item">{concert.venue}</span>
+                        <span className="meta-item">{concert.genres}</span>
                     </div>
                     {concert.sold_out === 1 && <div className="badge-soldout">SOLD OUT</div>}
                 </div>
             </header>
 
-            {/* --- Popis --- */}
             <section className="description-section">
                 <p>{concert.description}</p>
             </section>
 
-            {/* --- Výběr lístků --- */}
             <main className="tickets-container">
                 <h2 className="section-title">Select Tickets</h2>
 
@@ -164,57 +198,66 @@ const Concert = () => {
                         This concert is currently sold out.
                     </div>
                 ) : (
-                    <div className="ticket-grid">
-                        {TICKET_TYPES.map((type) => {
-                            const price = basePrice * type.multiplier;
-                            const currentQty = quantities[type.id];
-                            const totalPrice = price * currentQty;
-                            const isActive = currentQty > 0;
+                    <>
+                        <div className="ticket-grid">
+                            {TICKET_TYPES.map((type) => {
+                                const price = basePrice * type.multiplier;
+                                const currentQty = quantities[type.id];
+                                const isActive = currentQty > 0;
 
-                            return (
-                                <div key={type.id} className={`ticket-row ${isActive ? 'active' : ''}`}>
-
-                                    {/* Typ a Cena */}
-                                    <div className="ticket-info">
-                                        <h3>{type.label}</h3>
-                                        <span className="price-tag">${price.toFixed(2)} <small>/ each</small></span>
+                                return (
+                                    <div key={type.id} className={`ticket-row ${isActive ? 'active' : ''}`}>
+                                        <div className="ticket-info">
+                                            <h3>{type.label}</h3>
+                                            <span className="price-tag">${price.toFixed(2)} <small>/ each</small></span>
+                                        </div>
+                                        <div className="ticket-counter">
+                                            <button className="counter-btn" onClick={() => updateQuantity(type.id, -1)}>−</button>
+                                            <span className="counter-value">{currentQty}</span>
+                                            <button className="counter-btn" onClick={() => updateQuantity(type.id, 1)}>+</button>
+                                        </div>
                                     </div>
+                                );
+                            })}
+                        </div>
 
-                                    {/* Počítadlo */}
-                                    <div className="ticket-counter">
-                                        <button
-                                            className="counter-btn"
-                                            onClick={() => updateQuantity(type.id, -1)}
-                                        >−</button>
-
-                                        <span className="counter-value">{currentQty}</span>
-
-                                        <button
-                                            className="counter-btn"
-                                            onClick={() => updateQuantity(type.id, 1)}
-                                        >+</button>
-                                    </div>
-
-                                    {/* Akce */}
-                                    <div className="ticket-action">
-                                        {isActive && (
-                                            <div className="total-price">
-                                                Total: <span>${totalPrice.toFixed(2)}</span>
-                                            </div>
-                                        )}
-
-                                        <button
-                                            className="buy-btn"
-                                            onClick={() => handleBuyType(type.id, type.label, type.multiplier)}
-                                            disabled={!isActive || !isLoggedIn}
-                                        >
-                                            {isLoggedIn ? (isActive ? 'Buy Now' : 'Add') : 'Sign In'}
-                                        </button>
-                                    </div>
+                        {cartItems.length > 0 && (
+                            <div className="cart-section">
+                                <h2 className="section-title">🛒 Your Cart</h2>
+                                <div className="cart-items">
+                                    {cartItems.map(item => (
+                                        <div key={item.id} className="cart-item">
+                                            <span className="cart-item-label">{item.label}</span>
+                                            <span className="cart-item-qty">{item.quantity}x</span>
+                                            <span className="cart-item-price">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <button
+                                                className="cart-item-remove"
+                                                onClick={() => setQuantities(prev => ({ ...prev, [item.id]: 0 }))}
+                                            >✕</button>
+                                        </div>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <div className="cart-footer">
+                                    <div className="cart-total">
+                                        Total: <span>${cartTotal.toFixed(2)}</span>
+                                    </div>
+                                    {!isLoggedIn ? (
+                                        <Link to="/signin">
+                                            <button className="checkout-btn">Sign In to Buy</button>
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            className="checkout-btn"
+                                            onClick={handleCheckout}
+                                            disabled={isPurchasing}
+                                        >
+                                            {isPurchasing ? "Processing..." : `Buy ${cartCount} Ticket(s)`}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </main>
         </div>

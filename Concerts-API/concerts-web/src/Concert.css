@@ -127,7 +127,7 @@
 /* Řádek lístku */
 .ticket-row {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr;
     align-items: center;
     background: #1e1e1e;
     border: 1px solid #333;
@@ -205,7 +205,26 @@
     min-width: 20px;
     text-align: center;
 }
+/* Formulář editoru */
+.search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 12px;
+    color: white;
+    padding: 12px 16px;
+    font-size: 1rem;
+}
 
+/* Oprava gridu datum + cena */
+.editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
 /* Akce a Cena */
 .ticket-action {
     display: flex;
@@ -276,6 +295,126 @@
     color: #888;
 }
 
+/* --- Košík --- */
+.cart-section {
+    margin-top: 40px;
+    background: #1a1a1a;
+    border: 1px solid #ffa500;
+    border-radius: 16px;
+    padding: 25px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cart-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 15px;
+    background: #252525;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.cart-item-label {
+    font-weight: 600;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.cart-item-qty {
+    color: #aaa;
+    font-size: 0.95rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+.cart-item-price {
+    color: #ffa500;
+    font-weight: bold;
+    font-size: 1rem;
+    min-width: 70px;
+    text-align: right;
+}
+
+.cart-item-remove {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+    .cart-item-remove:hover {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+    }
+
+.cart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+.cart-total {
+    font-size: 1.2rem;
+    color: #ccc;
+}
+
+    .cart-total span {
+        color: #fff;
+        font-weight: bold;
+        font-size: 1.4rem;
+    }
+
+.checkout-btn {
+    background: #ffa500;
+    color: #000;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+    .checkout-btn:hover:not(:disabled) {
+        background: #ffb733;
+        transform: scale(1.03);
+    }
+
+    .checkout-btn:disabled {
+        background: #555;
+        color: #999;
+        cursor: not-allowed;
+    }
+
 /* Mobilní zobrazení */
 @media (max-width: 768px) {
     .ticket-row {
@@ -291,5 +430,19 @@
 
     .band-title {
         font-size: 2.5rem;
+    }
+
+    .cart-item {
+        grid-template-columns: 1fr auto auto;
+    }
+
+    .cart-footer {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .checkout-btn {
+        width: 100%;
     }
 }

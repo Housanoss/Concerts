@@ -117,7 +117,7 @@ namespace Concerts_API.Controllers
             var ticket = await _context.Tickets.FindAsync(ticketId);
             if (ticket == null) return NotFound(new { error = "Ticket not found" });
 
-            if (ticket.UserId != null && ticket.UserId != 0)
+            if (ticket.UserId != null && ticket.UserId != 0 && ticket.UserId != 1)
                 return BadRequest(new { error = "Ticket already sold" });
 
             ticket.UserId = userId;

@@ -1,11 +1,14 @@
 ﻿import { useEffect, useState } from 'react';
-//import { Link } from 'react-router-dom';
+
+const API_BASE = import.meta.env.VITE_API_URL;
 
 interface MyTicket {
     ticketId: number;
     headliner: string;
     venue: string;
     date: string;
+    type: string;
+    price: number;
 }
 
 const SideTicketList = () => {
@@ -19,12 +22,12 @@ const SideTicketList = () => {
         if (!token) {
             setIsLoggedIn(false);
             setLoading(false);
-            return; 
+            return;
         }
 
         setIsLoggedIn(true);
 
-        fetch('http://localhost:7231/api/tickets/mine', {
+        fetch(`${API_BASE}/api/tickets/mine`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -33,7 +36,6 @@ const SideTicketList = () => {
         })
             .then(res => {
                 if (res.status === 401) {
-                    // Token vypršel nebo je neplatný -> odhlásíme uživatele
                     localStorage.removeItem("token");
                     setIsLoggedIn(false);
                     throw new Error("Unauthorized");
@@ -50,7 +52,6 @@ const SideTicketList = () => {
             });
     }, []);
 
-    // --- VZHLED ---
     return (
         <div className="side-ticket-box" style={{
             backgroundColor: '#2a2a2a',
@@ -63,26 +64,21 @@ const SideTicketList = () => {
                 My Tickets
             </h3>
 
-            {/* STAV: Načítání */}
             {loading && <p>Loading tickets...</p>}
 
-            {/* STAV: Nepřihlášen */}
             {!isLoggedIn && !loading && (
                 <div style={{ textAlign: 'center', marginTop: '10px' }}>
                     <p style={{ fontSize: '14px', color: '#ccc' }}>Sign in to view your tickets.</p>
                 </div>
             )}
 
-            {/* STAV: Přihlášen, ale nemá lístky */}
             {isLoggedIn && tickets.length === 0 && !loading && (
                 <p style={{ color: '#aaa', fontStyle: 'italic' }}>You haven't bought any tickets yet.</p>
             )}
 
-            {/* STAV: Přihlášen a má lístky - VÝPIS */}
             <div className="tickets-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {tickets.map(ticket => (
                     <div key={ticket.ticketId} style={{
-                        //backgroundColor: '#3d3d3d',
                         padding: '10px',
                         borderRadius: '5px',
                         borderBottom: '1px solid #444',
@@ -94,6 +90,10 @@ const SideTicketList = () => {
                         </span>
                         <br />
                         <span style={{ fontSize: '0.85em', color: '#888' }}>{ticket.venue}</span>
+                        <br />
+                        <span style={{ fontSize: '0.8em', color: '#ffa500' }}>
+                            {ticket.type} – ${ticket.price?.toFixed(2)}
+                        </span>
                     </div>
                 ))}
             </div>

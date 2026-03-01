@@ -1,11 +1,11 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import './Concert.css'; // Použijeme stejné styly
+import './Concert.css';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 export default function ConcertEditor() {
-    const { id } = useParams(); // Pokud je v URL id, editujeme. Pokud ne, vytváříme.
+    const { id } = useParams();
     const navigate = useNavigate();
     const isEditMode = !!id;
 
@@ -16,17 +16,14 @@ export default function ConcertEditor() {
         price: '',
         description: '',
         genres: '',
-        openers: '',
         sold_out: false
     });
 
     useEffect(() => {
-        // Pokud editujeme, načteme data koncertu
         if (isEditMode) {
             fetch(`${API_BASE}/api/concerts/${id}`)
                 .then(res => res.json())
                 .then(data => {
-                    // Datum musíme převést pro input type="datetime-local"
                     const dateStr = data.date ? new Date(data.date).toISOString().slice(0, 16) : '';
                     setForm({
                         bands: data.bands || '',
@@ -35,8 +32,7 @@ export default function ConcertEditor() {
                         price: data.price || '',
                         description: data.description || '',
                         genres: data.genres || '',
-                        openers: data.openers || '',
-                        sold_out: data.sold_out === 1
+                        sold_out: data.sold_out === true || data.sold_out === 1
                     });
                 });
         }
@@ -52,11 +48,15 @@ export default function ConcertEditor() {
 
         const method = isEditMode ? 'PUT' : 'POST';
 
-        // Převedeme data do formátu pro backend
         const bodyData = {
-            ...form,
             id: isEditMode ? parseInt(id!) : 0,
-            sold_out: form.sold_out ? 1 : 0 // Backend čeká číslo 0/1 nebo bool? Zkontrolujte model. Posíláme 1/0 pro jistotu.
+            bands: form.bands,
+            venue: form.venue,
+            date: form.date,
+            price: form.price,
+            description: form.description,
+            genres: form.genres,
+            sold_out: form.sold_out
         };
 
         try {
@@ -73,7 +73,30 @@ export default function ConcertEditor() {
                 alert(isEditMode ? "Koncert upraven!" : "Koncert vytvořen!");
                 navigate('/');
             } else {
-                alert("Chyba při ukládání.");
+                const errText = await res.text();
+                console.error("Chyba:", errText);
+                alert("Chyba při ukládání: " + errText);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm("Opravdu chceš smazat tento koncert?")) return;
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch(`${API_BASE}/api/concerts/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                alert("Koncert smazán!");
+                navigate('/');
+            } else {
+                alert("Chyba při mazání.");
             }
         } catch (err) {
             console.error(err);
@@ -113,7 +136,7 @@ export default function ConcertEditor() {
                         />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="editor-grid">
                         <div>
                             <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Date</label>
                             <input
@@ -125,13 +148,13 @@ export default function ConcertEditor() {
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Base Price ($)</label>
+                            <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Price range ($)</label>
                             <input
-                                type="number"
+                                type="text"
                                 className="search-input"
                                 value={form.price}
                                 onChange={e => setForm({ ...form, price: e.target.value })}
-                                placeholder="100"
+                                placeholder="80 - 200"
                                 required
                             />
                         </div>
@@ -172,6 +195,19 @@ export default function ConcertEditor() {
 
                     <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                         <button type="button" onClick={() => navigate('/')} className="btn-secondary">Zrušit</button>
+                        {isEditMode && (
+                            <button type="button" onClick={handleDelete} style={{
+                                background: '#ff4444',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px 20px',
+                                borderRadius: '8px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}>
+                                🗑️ Smazat
+                            </button>
+                        )}
                         <button type="submit" className="buy-btn" style={{ flex: 1 }}>
                             {isEditMode ? 'Uložit změny' : 'Vytvořit koncert'}
                         </button>

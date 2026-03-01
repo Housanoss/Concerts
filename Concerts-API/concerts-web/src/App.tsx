@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import "./App.css";
-import { Link, useNavigate } from "react-router-dom"; // Přidat useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import SideTicketList from './Components/TicketSideList.tsx';
 
 interface Concert {
@@ -12,7 +12,6 @@ interface Concert {
     openers?: string;
 }
 
-// Přidali jsme prop 'isAdmin'
 interface ConcertTicketProps {
     concertId: number;
     concerts: Concert[];
@@ -54,7 +53,6 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
             </div>
 
             <div className="concert-action">
-                {/* LOGIKA: Pokud je Admin, zobrazí EDIT, jinak GET TICKETS */}
                 {isAdmin ? (
                     <Link to={`/admin/concert/${concert.id}`} className="cta-link">
                         <button className="cta-btn" style={{ backgroundColor: '#444', border: '1px solid #ffa500' }}>
@@ -75,22 +73,18 @@ export default function App() {
     const [concerts, setConcerts] = useState<Concert[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-   // const [isAdmin, setIsAdmin] = useState<boolean>(false); // Stav pro admina
-    // Natvrdo nastavíme true, abychom viděli tlačítka
     const [isAdmin, setIsAdmin] = useState<boolean>(true);
     const [username, setUsername] = useState<string>("");
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         const storedUsername = localStorage.getItem("username");
 
-        // Získáme roli a odstraníme případné uvozovky, mezery a převedeme na malá písmena
         let rawRole = localStorage.getItem("role");
 
-        // Ošetření, kdyby tam bylo null
         if (rawRole === null) rawRole = "";
 
-        // Vyčistíme string (někdy se tam uloží i s uvozovkami jako '"admin"')
         const cleanRole = rawRole.replace(/['"]+/g, '').trim().toLowerCase();
 
         console.log("Surová role:", rawRole);
@@ -99,14 +93,12 @@ export default function App() {
         setIsLoggedIn(!!token);
         setUsername(storedUsername || "");
 
-        // Teď porovnáme čistou roli
         if (cleanRole === "admin") {
             setIsAdmin(true);
         } else {
             setIsAdmin(false);
         }
 
-        // ... zbytek kódu pro fetch koncertů ...
         const API_URL = `${import.meta.env.VITE_API_URL}/api/concerts`;
 
         fetch(API_URL)
@@ -125,9 +117,14 @@ export default function App() {
     }, []);
 
     const handleLogout = () => {
-        localStorage.clear(); // Vyčistí vše (token, username, role)
+        localStorage.clear();
         window.location.reload();
     };
+
+    const filteredConcerts = concerts.filter(c =>
+        c.bands.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.venue.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     if (loading) return <div className="loading-screen">Loading concerts...</div>;
 
@@ -137,17 +134,10 @@ export default function App() {
                 <header className="app-header">
                     <h1>The Ticket Stand</h1>
 
-
-                    <div style={{ background: 'red', color: 'white', padding: '10px', margin: '10px 0' }}>
-                        DEBUG INFO: <br />
-                        Role v localStorage: <b>{localStorage.getItem("role") || "NULL"}</b> <br />
-                        Je Admin?: <b>{isAdmin ? "ANO" : "NE"}</b>
-                    </div>
-
+                   
 
                     <p className="subtitle">Discover & book your next live experience</p>
 
-                    {/* Vyhledávání + Admin tlačítko */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px' }}>
 
                         <div className="search-container" style={{ marginTop: 0, flex: 1 }}>
@@ -155,11 +145,12 @@ export default function App() {
                                 type="text"
                                 placeholder="Search by artist, venue..."
                                 className="search-input"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             <span className="search-icon">🔍</span>
                         </div>
 
-                        {/* TLAČÍTKO PLUS PRO ADMINA */}
                         {isAdmin && (
                             <Link to="/admin/concert/new" style={{ marginLeft: '20px' }}>
                                 <button style={{
@@ -177,7 +168,6 @@ export default function App() {
                                     fontWeight: 'bold',
                                     padding: "15px",
                                     textAlign: 'center',
-                                    
                                 }}>
                                     <p style={{ marginBottom: '35px' }}>+</p>
                                 </button>
@@ -187,15 +177,15 @@ export default function App() {
                 </header>
 
                 <div className="concert-list">
-                    {concerts.length === 0 ? (
+                    {filteredConcerts.length === 0 ? (
                         <div className="empty-state">No concerts found.</div>
                     ) : (
-                        concerts.map((item) => (
+                        filteredConcerts.map((item) => (
                             <ConcertInfo
                                 key={item.id}
                                 concertId={item.id}
                                 concerts={concerts}
-                                isAdmin={isAdmin} // Posíláme info dolů
+                                isAdmin={isAdmin}
                             />
                         ))
                     )}
@@ -221,7 +211,7 @@ export default function App() {
                     )}
                 </div>
                 <div className="sidebar-content">
-                    <SideTicketList />
+                    {!isAdmin && <SideTicketList />}
                 </div>
             </div>
         </div>
