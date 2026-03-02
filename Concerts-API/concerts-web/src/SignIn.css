@@ -1,79 +1,132 @@
-#root{
-    width:100%;
+/* SignIn.css - Auth styles, shared with SignUp and EditUser */
+
+#root {
+    width: 100%;
 }
 
-/* Dark background for the whole container */
+/* Auth container - centered dark card */
 .auth-container {
-    background-color: #2c2c2c; /* Dark gray */
-    color: white;
-    height: 100vh;
+    background-color: #121212;
+    color: #ffffff;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Title */
 .title {
-    text-decoration: underline;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
     margin-bottom: 2rem;
-    font-weight: normal;
-    letter-spacing: 1px;
+    background: linear-gradient(90deg, #fff, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-decoration: none;
 }
 
-/* Toggle (Log in / Sign up) styling */
-.toggle-container {
-    margin-bottom: 20px;
-    cursor: pointer;
-}
-
-    .toggle-container span {
-        margin: 0 10px;
-        padding-bottom: 2px;
-    }
-
-.active {
-    color: white;
-    border-bottom: 2px solid #888;
-}
-
-.inactive {
-    color: #888;
-}
-
-/* Form Styling */
+/* Form */
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Space between inputs */
-    width: 300px;
+    gap: 15px;
+    width: 320px;
+    background-color: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #333;
 }
 
 input {
-    padding: 10px;
-    background-color: white; /* Light gray input background */
-    border: none;
-    border-radius: 4px;
-    color: #2c2c2c;
+    padding: 12px 16px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.submit-btn {
-    background-color: #FAAA3A; /* The Orange/Yellow color */
-    color: #333;
-    padding: 10px;
-    border: none;
-    border-radius: 20px; /* Pill shape */
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-    .submit-btn:hover {
-        background-color: #e6992e;
+    input:focus {
+        border-color: #ffa500;
+        box-shadow: 0 0 0 2px rgba(255, 165, 0, 0.2);
     }
 
-body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    input::placeholder {
+        color: #666;
+    }
+
+/* Submit button */
+.submit-btn {
+    background-color: #ffa500;
+    color: #000;
+    padding: 12px;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: background-color 0.2s, transform 0.1s;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+    .submit-btn:hover:not(:disabled) {
+        background-color: #ffb733;
+        transform: scale(1.02);
+    }
+
+    .submit-btn:disabled {
+        background-color: #555;
+        color: #999;
+        cursor: not-allowed;
+    }
+
+/* Error & success messages */
+.error {
+    color: #ff6b6b;
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
+}
+
+.success {
+    color: #4ade80;
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
+}
+
+/* Register / Sign In link row */
+.auth-footer {
+    margin-top: 20px;
+    color: #aaaaaa;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Inline link buttons */
+.signUpBtn,
+.signInBtn {
+    background: transparent;
+    border: none;
+    color: #ffa500;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: color 0.2s;
+}
+
+    .signUpBtn:hover,
+    .signInBtn:hover {
+        color: #ffb733;
+    }

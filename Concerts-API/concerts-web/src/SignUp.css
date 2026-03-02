@@ -1,2 +1,2 @@
-body {
-}
+/* SignUp.css - inherits all auth styles from SignIn.css */
+@import './SignIn.css';
