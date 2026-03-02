@@ -130,36 +130,30 @@ namespace Concerts_API.Controllers
         [HttpPost("purchase/{concertId}")]
         public async Task<IActionResult> BuyTicket(int concertId, [FromQuery] string type = "Standard")
         {
-            // A) Zjistíme uživatele
             var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("id")?.Value;
             if (!int.TryParse(userIdString, out int userId)) return Unauthorized();
 
-            // B) Najdeme koncert (kvůli základní ceně)
             var concert = await _context.Concerts.FindAsync(concertId);
             if (concert == null) return NotFound("Concert not found.");
 
-            // C) Určíme cenu podle typu (Jednoduchá logika)
-            // Pokud je koncert string, musíme ho převést na číslo (decimal)
             if (!decimal.TryParse(concert.Price, out decimal basePrice))
             {
-                basePrice = 0; // Fallback kdyby byla cena v DB špatně
+                basePrice = 0;
             }
 
             decimal finalPrice = basePrice;
 
-            // Pokud chce VIP, zdražíme to o 50% (například)
             if (type == "VIP")
             {
                 finalPrice = basePrice * 1.5m;
             }
 
-            // D) Vytvoříme NOVÝ lístek s tímto typem
             var ticket = new Ticket
             {
                 ConcertId = concertId,
                 UserId = userId,
-                Price = finalPrice,  // Uložíme vypočítanou cenu
-                Type = type          // Uložíme typ (Standard/VIP...)
+                Price = finalPrice,
+                Type = type
             };
 
             _context.Tickets.Add(ticket);
@@ -188,33 +182,25 @@ namespace Concerts_API.Controllers
         [HttpPut("admin/{ticketId}")]
         public async Task<IActionResult> UpdateTicketAdmin(int ticketId, [FromBody] AdminUpdateTicketRequest request)
         {
-            // A) Kontrola role Admin
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             if (role != "Admin") return Unauthorized("Přístup pouze pro administrátory.");
 
-            // B) Najdeme lístek A PŘIPOJÍME KONCERT (abychom mohli měnit Sold_out)
             var ticket = await _context.Tickets
-                .Include(t => t.Concert) // <--- Důležité! Musíme načíst i koncert.
+                .Include(t => t.Concert)
                 .FirstOrDefaultAsync(t => t.Id == ticketId);
 
             if (ticket == null) return NotFound("Ticket not found.");
 
-            // C) LOGIKA ÚPRAV
-
-            // 1. Změna ceny lístku (pokud admin poslal novou cenu)
             if (request.Price.HasValue)
             {
                 ticket.Price = request.Price.Value;
             }
 
-            // 2. Změna typu lístku (pokud admin poslal nový typ)
             if (!string.IsNullOrEmpty(request.Type))
             {
                 ticket.Type = request.Type;
             }
 
-            // 3. Změna stavu koncertu (Vyprodáno)
-            // Pokud admin poslal true/false, změníme to v tabulce Concerts
             if (request.SoldOut.HasValue)
             {
                 if (ticket.Concert != null)
@@ -223,7 +209,6 @@ namespace Concerts_API.Controllers
                 }
             }
 
-            // D) Uložení změn (uloží se změny v Tickets i v Concerts)
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -235,11 +220,64 @@ namespace Concerts_API.Controllers
             });
         }
 
+        // 👇 OPRAVENÝ ENDPOINT: Upravena cesta a přidána ruční kontrola role
+        [HttpPost("admin/concert/{concertId}/batch")]
+        [Authorize]
+        public async Task<IActionResult> UpdateTicketBatch(int concertId, [FromBody] BatchUpdateRequest request)
+        {
+            // Ruční ověření role (spolehlivější než atribut)
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.IsNullOrEmpty(role) || !role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Unauthorized("Přístup pouze pro administrátory.");
+            }
+
+            var concert = await _context.Concerts.FindAsync(concertId);
+            if (concert == null) return NotFound("Koncert nenalezen.");
+
+            var existingUnsoldTickets = await _context.Tickets
+                .Where(t => t.ConcertId == concertId && t.UserId == 1 && t.Type == request.Type)
+                .ToListAsync();
+
+            if (existingUnsoldTickets.Any())
+            {
+                _context.Tickets.RemoveRange(existingUnsoldTickets);
+            }
+
+            var newTickets = new List<Ticket>();
+            for (int i = 0; i < request.Count; i++)
+            {
+                newTickets.Add(new Ticket
+                {
+                    ConcertId = concertId,
+                    UserId = 1,
+                    Type = request.Type,
+                    Price = request.Price
+                });
+            }
+
+            if (newTickets.Any())
+            {
+                _context.Tickets.AddRange(newTickets);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"Úspěšně aktualizováno. Typ: {request.Type}, Počet: {request.Count}, Cena: {request.Price}" });
+        }
+
         public class AdminUpdateTicketRequest
         {
-            public decimal? Price { get; set; } // Změna ceny lístku
-            public string? Type { get; set; }   // Změna typu (VIP/Standard)
-            public bool? SoldOut { get; set; }  // Změna stavu koncertu (Vyprodáno: Ano/Ne)
+            public decimal? Price { get; set; }
+            public string? Type { get; set; }
+            public bool? SoldOut { get; set; }
+        }
+
+        public class BatchUpdateRequest
+        {
+            public string Type { get; set; }
+            public int Count { get; set; }
+            public decimal Price { get; set; }
         }
     }
 }

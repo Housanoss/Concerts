@@ -9,6 +9,8 @@ interface AdminTicket {
     concertArtist: string;
     price: number;
     type: string;
+    venue: string;
+    date: string;
 }
 
 const AdminTickets = () => {
@@ -19,7 +21,8 @@ const AdminTickets = () => {
 
     // Stavy pro editaci
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [editForm, setEditForm] = useState({ price: 0, type: 'Standard', soldOut: false });
+    const [editForm, setEditForm] = useState({
+        price: 0, type: 'Standard', soldOut: false, venue: '', date: '' });
 
     const token = localStorage.getItem("token");
 
@@ -57,7 +60,8 @@ const AdminTickets = () => {
     // Zapnutí edita?ního módu pro konkrétní ?ádek
     const handleEditClick = (ticket: AdminTicket) => {
         setEditingId(ticket.ticketId);
-        setEditForm({ price: ticket.price, type: ticket.type, soldOut: false });
+        setEditForm({
+            price: ticket.price, type: ticket.type, soldOut: false, venue: ticket.venue || '', date: dateStr });
     };
 
     // Uložení zm?n na Backend
