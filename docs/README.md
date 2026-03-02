@@ -2,14 +2,16 @@ Je to appka na kupovani listku<br>
 
 
 ### ToDo
+**Oba**
+- [ ] udělat možnost přidávání/odebírání lístků přes admin formulář u koncertu
 
 **Merty**
 - [X] Vytvořit homepage
 - [X] Naplnit databázi daty ("Narvat databázi datama")
 - [x] Vytvořit login
-- [ ] Vytvořit register
-- [ ] Začít dělat stránku
-- [ ] Přidat tlačítka na add/delte/edit
+- [ ] Vyřešit sort koncertu podle data
+- [ ] Doladit vzhled
+- [ ] Dát styly do samostatného souboru
 
 **Houska**
   - [ ] Přidat role
