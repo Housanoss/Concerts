@@ -57,9 +57,8 @@ body {
 
 /* Vyhledávání */
 .search-container {
-    margin-top: 20px;
     position: relative;
-    max-width: 500px;
+    flex: 1;
 }
 
 .search-input {
@@ -86,6 +85,54 @@ body {
     top: 50%;
     transform: translateY(-50%);
     opacity: 0.5;
+}
+
+/* Header actions row (search + add button) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+/* Add concert button */
+.add-concert-link {
+    flex-shrink: 0;
+}
+
+.btn-add-concert {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ffa500;
+    color: black;
+    border: none;
+    font-size: 36px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0;
+    padding-bottom: 8px;
+}
+
+    .btn-add-concert:hover {
+        background: #ffb733;
+    }
+
+/* Admin edit button variant */
+.cta-btn--admin {
+    background-color: #444;
+    border: 1px solid #ffa500;
+}
+
+/* Admin badge */
+.admin-badge {
+    color: #ffa500;
+    display: block;
 }
 
 /* Seznam koncertů (Karty) */
@@ -135,6 +182,12 @@ body {
         color: var(--text-muted);
     }
 
+    .concert-date .year {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
 /* Info o koncertu */
 .concert-info {
     flex: 1;
@@ -165,9 +218,9 @@ body {
 }
 
 .cta-btn {
-/*    background-color: var(--accent);*/
+    /*    background-color: var(--accent);*/
     color: #fff;
-    font-weight: ;
+    font-weight:;
     border: 2px solid var(--accent);
     padding: 12px 25px;
     border-radius: 30px;
@@ -195,14 +248,13 @@ body {
     padding: 20px;
     border-radius: var(--border-radius);
     border: 1px solid #333;
-
 }
 
 .auth-buttons {
     display: flex;
-    gap: 10px ;
-    flex-direction:row;
-    justify-content:space-around;
+    gap: 10px;
+    flex-direction: row;
+    justify-content: space-around;
 }
 
 .btn-primary, .btn-secondary {
@@ -224,7 +276,7 @@ body {
 .btn-secondary {
     background-color: #333;
     color: white;
-    align-self: flex-end ;
+    align-self: flex-end;
 }
 
     .btn-primary:hover, .btn-secondary:hover {
