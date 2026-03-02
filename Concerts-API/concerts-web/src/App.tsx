@@ -47,8 +47,8 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
                     {guests ? `with ${guests}` : (concert.openers ? `with ${concert.openers}` : "")}
                 </p>
                 <div className="meta-info">
-                    <span>📍 {concert.venue}</span>
-                    <span>💰 {priceRange}</span>
+                    <span>{concert.venue}</span>
+                    <span>{priceRange}</span>
                 </div>
             </div>
 
@@ -56,7 +56,7 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
                 {isAdmin ? (
                     <Link to={`/admin/concert/${concert.id}`} className="cta-link">
                         <button className="cta-btn" style={{ backgroundColor: '#444', border: '1px solid #ffa500' }}>
-                            ✏️ Edit
+                             Edit
                         </button>
                     </Link>
                 ) : (
@@ -148,7 +148,7 @@ export default function App() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <span className="search-icon">🔍</span>
+                            <span className="search-icon"></span>
                         </div>
 
                         {isAdmin && (
