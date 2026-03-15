@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
+import './TicketSideList.css';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -53,45 +54,30 @@ const SideTicketList = () => {
     }, []);
 
     return (
-        <div className="side-ticket-box" style={{
-            backgroundColor: '#2a2a2a',
-            padding: '15px',
-            borderRadius: '10px',
-            marginTop: '20px',
-            color: 'white'
-        }}>
-            <h3 style={{ borderBottom: '2px solid #555', paddingBottom: '10px' }}>
-                My Tickets
-            </h3>
+        <div className="side-ticket-box">
+            <h3>My Tickets</h3>
 
-            {loading && <p>Loading tickets...</p>}
+            {loading && <p className="side-ticket-loading">Loading tickets...</p>}
 
             {!isLoggedIn && !loading && (
-                <div style={{ textAlign: 'center', marginTop: '10px' }}>
-                    <p style={{ fontSize: '14px', color: '#ccc' }}>Sign in to view your tickets.</p>
-                </div>
+                <p className="side-ticket-signin">Sign in to view your tickets.</p>
             )}
 
             {isLoggedIn && tickets.length === 0 && !loading && (
-                <p style={{ color: '#aaa', fontStyle: 'italic' }}>You haven't bought any tickets yet.</p>
+                <p className="side-ticket-empty">You haven't bought any tickets yet.</p>
             )}
 
-            <div className="tickets-list" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="tickets-list">
                 {tickets.map(ticket => (
-                    <div key={ticket.ticketId} style={{
-                        padding: '10px',
-                        borderRadius: '5px',
-                        borderBottom: '1px solid #444',
-                        marginBottom: '10px'
-                    }}>
-                        <strong style={{ fontSize: '1.1em', display: 'block' }}>{ticket.headliner}</strong>
-                        <span style={{ fontSize: '0.85em', color: '#ccc' }}>
+                    <div key={ticket.ticketId} className="ticket-item">
+                        <strong className="ticket-item-headliner">{ticket.headliner}</strong>
+                        <span className="ticket-item-date">
                             {new Date(ticket.date).toLocaleDateString()}
                         </span>
                         <br />
-                        <span style={{ fontSize: '0.85em', color: '#888' }}>{ticket.venue}</span>
+                        <span className="ticket-item-venue">{ticket.venue}</span>
                         <br />
-                        <span style={{ fontSize: '0.8em', color: '#ffa500' }}>
+                        <span className="ticket-item-type">
                             {ticket.type} – ${ticket.price?.toFixed(2)}
                         </span>
                     </div>

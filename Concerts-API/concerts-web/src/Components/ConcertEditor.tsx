@@ -1,13 +1,13 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import './Concert.css';
+import './ConcertEditor.css';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 interface AdminTicket {
     ticketId: number;
-    userId?: number;   // 👈 Přidáno kvůli mapování z C#
-    UserId?: number;   // 👈 Přidáno kvůli mapování z C#
+    userId?: number;
+    UserId?: number;
     ownerId?: number;
     ownerEmail?: string;
     concertArtist?: string;
@@ -29,7 +29,6 @@ export default function ConcertEditor() {
     const isEditMode = !!id;
     const token = localStorage.getItem("token");
 
-    // --- STAV PRO KONCERT ---
     const [form, setForm] = useState({
         bands: '',
         venue: '',
@@ -40,37 +39,29 @@ export default function ConcertEditor() {
         sold_out: false
     });
 
-    // --- STAV PRO HROMADNOU SPRÁVU NEZAKOUPENÝCH LÍSTKŮ (ID = 1) ---
     const [batches, setBatches] = useState<TicketBatch[]>([
         { type: 'Standard', count: 0, price: 0 },
         { type: 'VIP', count: 0, price: 0 },
         { type: 'Golden Circle', count: 0, price: 0 }
     ]);
 
-    // --- STAV PRO ZAKOUPENÉ LÍSTKY (ID !== 1) ---
     const [soldTickets, setSoldTickets] = useState<AdminTicket[]>([]);
 
     const fetchTickets = async () => {
         try {
-            // 👇 ZMĚNA 1: Odstraněno slovo "admin" z URL, aby to sedělo na C# backend
             const res = await fetch(`${API_BASE}/api/tickets/concert/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.ok) {
                 const data: AdminTicket[] = await res.json();
-                console.log("Načtené lístky z DB:", data); // Pro kontrolu (F12)
+                console.log("Načtené lístky z DB:", data);
 
-                // Zjistíme, jestli je lístek volný (ID = 1)
                 const isUnsold = (t: any) => t.userId === 1 || t.UserId === 1 || t.ownerId === 1;
 
-                // Vyfiltrujeme zakoupené
                 setSoldTickets(data.filter(t => !isUnsold(t)));
 
-                // Vyfiltrujeme nezakoupené a spočítáme je
                 const unsold = data.filter(t => isUnsold(t));
-
-                // 👇 ZMĚNA 2: Převedeno na malá písmena pro spolehlivé porovnání
                 const std = unsold.filter(t => (t.type || "").toLowerCase() === 'standard');
                 const vip = unsold.filter(t => (t.type || "").toLowerCase() === 'vip');
                 const gold = unsold.filter(t => (t.type || "").toLowerCase() === 'golden circle');
@@ -100,7 +91,7 @@ export default function ConcertEditor() {
                         price: data.price || '',
                         description: data.description || '',
                         genres: data.genres || '',
-                        sold_out: data.sold_out === 1
+                        sold_out: data.sold_out === true || data.sold_out === 1
                     });
                 });
 
@@ -116,13 +107,13 @@ export default function ConcertEditor() {
         const bodyData = {
             ...form,
             id: isEditMode ? parseInt(id!) : 0,
-            sold_out: form.sold_out ? 1 : 0
+            sold_out: Boolean(form.sold_out)
         };
 
         try {
             const res = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                method,
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify(bodyData)
             });
 
@@ -137,28 +128,43 @@ export default function ConcertEditor() {
         }
     };
 
+    const handleDeleteConcert = async () => {
+        if (!window.confirm('Opravdu chceš smazat tento koncert? Smažou se i všechny lístky!')) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/concerts/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                alert('Koncert byl smazán.');
+                navigate('/');
+            } else {
+                alert('Chyba při mazání koncertu.');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const handleBatchChange = (type: string, field: 'count' | 'price', value: number) => {
         setBatches(prev => prev.map(b => b.type === type ? { ...b, [field]: value } : b));
     };
 
-    // Nová funkce pro hromadné uložení všech typů lístků najednou
     const handleSaveAllBatches = async () => {
         try {
             const promises = batches.map(batch =>
                 fetch(`${API_BASE}/api/tickets/admin/concert/${id}/batch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({
-                        type: batch.type,
-                        count: batch.count,
-                        price: batch.price
-                    })
+                    body: JSON.stringify({ type: batch.type, count: batch.count, price: batch.price })
                 })
             );
 
             await Promise.all(promises);
             alert("Všechny lístky byly úspěšně uloženy!");
-            fetchTickets(); // Aktualizace UI
+            fetchTickets();
         } catch (err) {
             console.error(err);
             alert("Chyba při hromadné aktualizaci lístků.");
@@ -166,74 +172,79 @@ export default function ConcertEditor() {
     };
 
     return (
-        <div className="concert-page" style={{ padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="editor-page">
 
             {/* 1. ČÁST: NASTAVENÍ KONCERTU */}
-            <div style={{ background: '#1e1e1e', padding: '40px', borderRadius: '12px', width: '100%', maxWidth: '800px', border: '1px solid #333', marginBottom: '40px' }}>
-                <h2 style={{ color: '#ffa500', marginBottom: '20px' }}>
-                    {isEditMode ? '✏️ Nastavení koncertu' : '➕ Nový Koncert'}
-                </h2>
+            <div className="editor-card">
+                <h2>{isEditMode ? 'Nastavení koncertu' : 'Nový Koncert'}</h2>
 
-                <form onSubmit={handleConcertSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <form className="editor-form" onSubmit={handleConcertSubmit}>
                     <div>
-                        <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Kdo hraje</label>
-                        <input type="text" className="search-input" value={form.bands} onChange={e => setForm({ ...form, bands: e.target.value })} required />
+                        <label className="editor-label">Kdo hraje</label>
+                        <input type="text" className="search-input" value={form.bands}
+                            onChange={e => setForm({ ...form, bands: e.target.value })} required />
                     </div>
                     <div>
-                        <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Místo (Venue)</label>
-                        <input type="text" className="search-input" value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} required />
+                        <label className="editor-label">Místo (Venue)</label>
+                        <input type="text" className="search-input" value={form.venue}
+                            onChange={e => setForm({ ...form, venue: e.target.value })} required />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="editor-grid">
                         <div>
-                            <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Datum</label>
-                            <input type="datetime-local" className="search-input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
+                            <label className="editor-label">Datum</label>
+                            <input type="datetime-local" className="search-input" value={form.date}
+                                onChange={e => setForm({ ...form, date: e.target.value })} required />
                         </div>
                         <div>
-                            <label style={{ display: 'block', color: '#888', marginBottom: '5px' }}>Základní cena ($)</label>
-                            <input type="number" className="search-input" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required />
+                            <label className="editor-label">Základní cena ($)</label>
+                            <input type="text" className="search-input" value={form.price}
+                                onChange={e => setForm({ ...form, price: e.target.value })} required />
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                        <button type="submit" className="buy-btn" style={{ flex: 1 }}>{isEditMode ? 'Uložit nastavení koncertu' : 'Vytvořit koncert'}</button>
+                    <div className="editor-actions">
+                        <button type="submit" className="buy-btn" style={{ flex: 1 }}>
+                            {isEditMode ? 'Uložit nastavení koncertu' : 'Vytvořit koncert'}
+                        </button>
+                        {isEditMode && (
+                            <button type="button" className="btn-delete-concert" onClick={handleDeleteConcert}>
+                                Smazat koncert
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>
 
-            {/* 2. ČÁST: SPRÁVA NEZAKOUPENÝCH LÍSTKŮ (Sklad) */}
+            {/* 2. ČÁST: SKLAD LÍSTKŮ */}
             {isEditMode && (
-                <div style={{ background: '#1e1e1e', padding: '40px', borderRadius: '12px', width: '100%', maxWidth: '800px', border: '1px solid #333', marginBottom: '40px' }}>
-                    <h3 style={{ color: '#ffa500', marginBottom: '20px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
-                        📦 Sklad volných lístků (Nezakoupené)
-                    </h3>
+                <div className="editor-card">
+                    <h3> Sklad volných lístků (Nezakoupené)</h3>
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', background: '#222' }}>
+                    <table className="tickets-table">
                         <thead>
-                            <tr style={{ background: '#333', textAlign: 'left', color: 'white' }}>
-                                <th style={{ padding: '15px' }}>Typ lístku</th>
-                                <th style={{ padding: '15px' }}>Počet kusů</th>
-                                <th style={{ padding: '15px' }}>Cena za kus ($)</th>
+                            <tr>
+                                <th>Typ lístku</th>
+                                <th>Počet kusů</th>
+                                <th>Cena za kus ($)</th>
                             </tr>
                         </thead>
                         <tbody>
                             {batches.map(batch => (
-                                <tr key={batch.type} style={{ borderBottom: '1px solid #444', color: '#ccc' }}>
-                                    <td style={{ padding: '15px', fontWeight: 'bold', color: '#fff' }}>{batch.type}</td>
-                                    <td style={{ padding: '15px' }}>
+                                <tr key={batch.type}>
+                                    <td>{batch.type}</td>
+                                    <td>
                                         <input
                                             type="number"
                                             min="0"
                                             value={batch.count}
                                             onChange={(e) => handleBatchChange(batch.type, 'count', parseInt(e.target.value) || 0)}
-                                            style={{ width: '100%', padding: '8px', borderRadius: '5px', background: '#333', color: 'white', border: '1px solid #555' }}
                                         />
                                     </td>
-                                    <td style={{ padding: '15px' }}>
+                                    <td>
                                         <input
                                             type="number"
                                             min="0"
                                             value={batch.price}
                                             onChange={(e) => handleBatchChange(batch.type, 'price', parseFloat(e.target.value) || 0)}
-                                            style={{ width: '100%', padding: '8px', borderRadius: '5px', background: '#333', color: 'white', border: '1px solid #555' }}
                                         />
                                     </td>
                                 </tr>
@@ -241,22 +252,17 @@ export default function ConcertEditor() {
                         </tbody>
                     </table>
 
-                    {/* JEDNOTNÉ TLAČÍTKO PRO ULOŽENÍ */}
-                    <button
-                        onClick={handleSaveAllBatches}
-                        style={{ width: '100%', marginTop: '20px', background: '#ffa500', color: 'black', padding: '12px 15px', borderRadius: '5px', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                        💾 Uložit všechny lístky
+                    <button className="btn-save-batches" onClick={handleSaveAllBatches}>
+                        Uložit všechny lístky
                     </button>
                 </div>
             )}
 
-            {/* 3. ČÁST: ZAKOUPENÉ LÍSTKY */}
+            {/* 3. ČÁST: PRODANÉ LÍSTKY */}
             {isEditMode && soldTickets.length > 0 && (
-                <div style={{ background: '#1e1e1e', padding: '40px', borderRadius: '12px', width: '100%', maxWidth: '800px', border: '1px solid #333' }}>
-                    <h3 style={{ color: '#aaa', marginBottom: '20px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
-                        👤 Již prodané lístky ({soldTickets.length} ks)
-                    </h3>
-                    <p style={{ color: '#888' }}>Lístky, které si již zakoupili reální uživatelé.</p>
+                <div className="editor-card">
+                    <h3 className="sold-heading">Již prodané lístky ({soldTickets.length} ks)</h3>
+                    <p className="sold-info">Lístky, které si již zakoupili reální uživatelé.</p>
                 </div>
             )}
 

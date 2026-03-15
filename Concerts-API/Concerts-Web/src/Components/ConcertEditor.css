@@ -1,0 +1,172 @@
+/* ConcertEditor.css */
+
+.editor-page {
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #121212;
+    min-height: 100vh;
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+.editor-card {
+    background: #1e1e1e;
+    padding: 40px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid #333;
+    margin-bottom: 40px;
+}
+
+    .editor-card h2 {
+        color: #ffa500;
+        margin-bottom: 20px;
+    }
+
+    .editor-card h3 {
+        color: #ffa500;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 10px;
+    }
+
+        .editor-card h3.sold-heading {
+            color: #aaa;
+        }
+
+.editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.editor-label {
+    display: block;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 12px;
+    color: white;
+    padding: 12px 16px;
+    font-size: 1rem;
+}
+
+.buy-btn {
+    background: #ffa500;
+    color: #000;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    font-size: 1rem;
+}
+
+    .buy-btn:hover:not(:disabled) {
+        background: #ffb733;
+        transform: scale(1.05);
+    }
+
+    .buy-btn:disabled {
+        background: #333;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+.btn-delete-concert {
+    padding: 10px 20px;
+    background: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+    .btn-delete-concert:hover {
+        background: #e74c3c;
+    }
+
+/* Tabulka lístkù */
+.tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #222;
+}
+
+    .tickets-table thead tr {
+        background: #333;
+        text-align: left;
+        color: white;
+    }
+
+    .tickets-table th {
+        padding: 15px;
+    }
+
+    .tickets-table td {
+        padding: 15px;
+        border-bottom: 1px solid #444;
+        color: #ccc;
+    }
+
+        .tickets-table td:first-child {
+            font-weight: bold;
+            color: #fff;
+        }
+
+    .tickets-table input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border-radius: 5px;
+        background: #333;
+        color: white;
+        border: 1px solid #555;
+        box-sizing: border-box;
+    }
+
+.btn-save-batches {
+    width: 100%;
+    margin-top: 20px;
+    background: #ffa500;
+    color: black;
+    padding: 12px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+    .btn-save-batches:hover {
+        background: #ffb733;
+    }
+
+.sold-info {
+    color: #888;
+    margin-top: 10px;
+}
