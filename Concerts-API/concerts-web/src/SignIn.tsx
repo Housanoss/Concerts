@@ -16,7 +16,6 @@ const SignIn = () => {
         e.preventDefault();
         setError(null);
 
-        // Validace
         if (!email.trim() || !password.trim()) {
             setError("Email and Password are required");
             return;
@@ -32,25 +31,20 @@ const SignIn = () => {
                 body: JSON.stringify({ email, password }),
             });
 
-            // Bezpečné parsování odpovědi (pro případ, že backend vrátí chybu v textu)
             const rawText = await response.text();
             let data: any = {};
             try {
                 data = JSON.parse(rawText);
             } catch {
-                data = { message: rawText }; // Fallback pro ne-JSON odpovědi
+                data = { message: rawText };
             }
 
             if (!response.ok) {
-                // Zobrazíme chybu z backendu nebo obecnou
                 setError(data.error || data.message || `Login failed (${response.status})`);
                 setLoading(false);
                 return;
             }
 
-            // --- ÚSPĚŠNÉ PŘIHLÁŠENÍ ---
-
-            // 1. Token (backend ho může poslat jako 'token' nebo 'Token')
             const token = data.token || data.Token;
             if (!token) {
                 setError("Login successful but no token received.");
@@ -59,26 +53,19 @@ const SignIn = () => {
             }
             localStorage.setItem("token", token);
 
-            // 2. Username
             const username = data.username || data.Username || "User";
             localStorage.setItem("username", username);
 
-            // 3. Email
             const userEmail = data.email || data.Email || email;
             localStorage.setItem("email", userEmail);
 
-            // 👇 4. ROLE (KLÍČOVÁ ČÁST PRO ADMINA) 👇
-            // Backend posílá 'role' nebo 'Role'. Uložíme to.
-            // Pokud role nepřijde, uložíme "User".
             const role = data.role || data.Role || "User";
             localStorage.setItem("role", role);
 
-            console.log("✅ Login Success!");
-            console.log("👤 User:", username);
-            console.log("🔑 Role:", role);
+            console.log("Login Success!");
+            console.log("User:", username);
+            console.log("Role:", role);
 
-            // 5. Přesměrování a Refresh
-            // Refresh je nutný, aby si App.tsx znovu načetla localStorage a ukázala tlačítka
             navigate("/");
             window.location.reload();
 
@@ -110,7 +97,7 @@ const SignIn = () => {
                     required
                 />
 
-                {error && <p className="error" style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
+                {error && <p className="error">{error}</p>}
 
                 <button
                     type="submit"
@@ -121,7 +108,7 @@ const SignIn = () => {
                 </button>
             </form>
 
-            <span>
+            <span className="auth-footer">
                 Don't have an account?
                 <Link to="/signup">
                     <button className="signUpBtn">Register</button>

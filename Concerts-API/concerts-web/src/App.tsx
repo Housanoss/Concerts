@@ -25,6 +25,7 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
     const dateObj = new Date(concert.date);
     const day = dateObj.getDate();
     const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+    const year = dateObj.getFullYear();
 
     const allBands = concert.bands.split(',');
     const headliner = allBands[0].trim();
@@ -39,6 +40,7 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
             <div className="concert-date">
                 <span className="day">{day}</span>
                 <span className="month">{month}</span>
+                <span className="year">{year}</span>
             </div>
 
             <div className="concert-info">
@@ -47,16 +49,16 @@ function ConcertInfo({ concertId, concerts, isAdmin }: ConcertTicketProps) {
                     {guests ? `with ${guests}` : (concert.openers ? `with ${concert.openers}` : "")}
                 </p>
                 <div className="meta-info">
-                    <span>📍 {concert.venue}</span>
-                    <span>💰 {priceRange}</span>
+                    <span>{concert.venue}</span>
+                    <span>{priceRange}</span>
                 </div>
             </div>
 
             <div className="concert-action">
                 {isAdmin ? (
                     <Link to={`/admin/concert/${concert.id}`} className="cta-link">
-                        <button className="cta-btn" style={{ backgroundColor: '#444', border: '1px solid #ffa500' }}>
-                            ✏️ Edit
+                        <button className="cta-btn cta-btn--admin">
+                            Edit
                         </button>
                     </Link>
                 ) : (
@@ -107,7 +109,10 @@ export default function App() {
                 return res.json();
             })
             .then((data: Concert[]) => {
-                setConcerts(data);
+                const sorted = [...data].sort(
+                    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
+                setConcerts(sorted);
                 setLoading(false);
             })
             .catch((err) => {
@@ -134,13 +139,13 @@ export default function App() {
                 <header className="app-header">
                     <h1>The Ticket Stand</h1>
 
-                   
+
 
                     <p className="subtitle">Discover & book your next live experience</p>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px' }}>
+                    <div className="header-actions">
 
-                        <div className="search-container" style={{ marginTop: 0, flex: 1 }}>
+                        <div className="search-container">
                             <input
                                 type="text"
                                 placeholder="Search by artist, venue..."
@@ -148,29 +153,12 @@ export default function App() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <span className="search-icon">🔍</span>
+                            <span className="search-icon"></span>
                         </div>
 
                         {isAdmin && (
-                            <Link to="/admin/concert/new" style={{ marginLeft: '20px' }}>
-                                <button style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    borderRadius: '50px',
-                                    background: '#ffa500',
-                                    color: 'black',
-                                    border: 'none',
-                                    fontSize: '2rem',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontWeight: 'bold',
-                                    padding: "15px",
-                                    textAlign: 'center',
-                                }}>
-                                    <p style={{ marginBottom: '35px' }}>+</p>
-                                </button>
+                            <Link to="/admin/concert/new" className="add-concert-link">
+                                <button className="btn-add-concert">+</button>
                             </Link>
                         )}
                     </div>
@@ -204,7 +192,7 @@ export default function App() {
                             <div className="user-greeting">
                                 <span>Hello,</span>
                                 <Link to="/edituser" className="username-link">{username}</Link>
-                                {isAdmin && <small style={{ color: '#ffa500', display: 'block' }}> (Administrator)</small>}
+                                {isAdmin && <small className="admin-badge"> (Administrator)</small>}
                             </div>
                             <button onClick={handleLogout} className="btn-logout">Log Out</button>
                         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./SignUp.css";
+import "./EditUser.css";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -118,7 +118,7 @@ const EditUser = () => {
         }
 
         if (!username.trim() || !email.trim()) {
-            setError("Username a e-mail jsou povinné.");
+            setError("Username and e-mail are mandatory.");
             return;
         }
 
@@ -172,7 +172,7 @@ const EditUser = () => {
                 return;
             }
 
-            setSuccess("Údaje úspìšnì uloženy.");
+            setSuccess("Edit saved.");
 
             if (username) localStorage.setItem("username", username);
             if (email) localStorage.setItem("email", email);
@@ -224,7 +224,6 @@ const EditUser = () => {
                 return;
             }
 
-            // Úspìšné smazání - vyèistit localStorage a pøesmìrovat
             localStorage.removeItem("token");
             localStorage.removeItem("username");
             localStorage.removeItem("email");
@@ -273,65 +272,40 @@ const EditUser = () => {
                 />
 
                 {error && <p className="error">{error}</p>}
-                {success && <p style={{ color: "green" }}>{success}</p>}
+                {success && <p className="success">{success}</p>}
 
                 <button type="submit" className="submit-btn" disabled={saving}>
                     {saving ? "Saving..." : "Save changes"}
                 </button>
             </form>
 
-            {/* Delete Account Section */}
-            <div style={{ marginTop: "40px", borderTop: "1px solid #ddd", paddingTop: "20px" }}>
-                <h3 style={{ color: "#d32f2f" }}>Danger Zone</h3>
+            <div className="danger-zone">
+                <h3 className="danger-zone__title">Danger Zone</h3>
 
                 {!showDeleteConfirm ? (
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        style={{
-                            backgroundColor: "#d32f2f",
-                            color: "white",
-                            padding: "10px 20px",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "14px"
-                        }}
+                        className="btn-delete"
                     >
                         Delete Account
                     </button>
                 ) : (
                     <div>
-                        <p style={{ color: "#d32f2f", fontWeight: "bold" }}>
+                        <p className="danger-zone__warning">
                             Are you sure? This action cannot be undone!
                         </p>
-                        <div style={{ display: "flex", gap: "10px" }}>
+                        <div className="danger-zone__actions">
                             <button
                                 onClick={handleDeleteAccount}
                                 disabled={deleting}
-                                style={{
-                                    backgroundColor: "#d32f2f",
-                                    color: "white",
-                                    padding: "10px 20px",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: deleting ? "not-allowed" : "pointer",
-                                    fontSize: "14px"
-                                }}
+                                className="btn-delete btn-delete--confirm"
                             >
                                 {deleting ? "Deleting..." : "Yes, Delete My Account"}
                             </button>
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
                                 disabled={deleting}
-                                style={{
-                                    backgroundColor: "#666",
-                                    color: "white",
-                                    padding: "10px 20px",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    fontSize: "14px"
-                                }}
+                                className="btn-delete-cancel"
                             >
                                 Cancel
                             </button>

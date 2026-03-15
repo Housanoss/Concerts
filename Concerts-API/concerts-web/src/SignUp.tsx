@@ -5,14 +5,12 @@ import { Link, useNavigate } from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_URL;
 
 const SignUp = () => {
-    // STATE
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // FUNCTION
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -78,17 +76,17 @@ const SignUp = () => {
                     required
                 />
 
-                {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+                {error && <p className="error">{error}</p>}
 
                 <button type="submit" className="submit-btn">
                     Sign up
                 </button>
             </form>
 
-            <span>
+            <span className="auth-footer">
                 Already have an account?
                 <Link to="/signin">
-                    <button className="signInBtn" style={{ marginLeft: '10px' }}>Sign In</button>
+                    <button className="signInBtn">Sign In</button>
                 </Link>
             </span>
         </div>
